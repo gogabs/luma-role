@@ -1,0 +1,12 @@
+{
+  "id": "role",
+  "name": "Rolê",
+  "description": "Patinação urbana só com som: quatro batidas avisam o obstáculo, aperte na quarta.",
+  "version": "0.1.0",
+  "contract": 1,
+  "runtime": "python3",
+  "exec": "main.py",
+  "languages": ["pt-BR"],
+  "tags": ["a11y", "arcade"],
+  "author": "Gabs"
+}
