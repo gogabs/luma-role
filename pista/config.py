@@ -34,9 +34,9 @@ HOLD_KINDS = tuple(k for k, v in KINDS.items() if v.get("hold"))   # segurados a
 # Escada e corrimão pedem segurar o botão até o fim; soltar antes é tombo.
 RAIL_JUMP = 0.3           # do salto (B) até pousar no corrimão; o A precisa estar segurado aí
 RAIL_TIME = 1.4           # o grind, com A segurado
-FREADA_INDICATOR = 0.6     # quanto depois do começo da freada a corneta diz o lado
-FREADA_REPEAT = 0.4       # e repete esta folga depois
-FREADA_DEADLINE = 0.7     # tempo para apertar o lado, contado do aviso
+FREADA_INDICATOR = 0.45    # quanto depois do começo da freada a corneta diz o lado
+FREADA_REPEAT = 0.35      # e repete esta folga depois
+FREADA_DEADLINE = 1.0     # tempo para apertar o lado, contado do aviso
 RELEASE_GRACE = 0.08      # soltar no fim, com esta folga, ainda vale
 POINTS_HOLD = 60          # bônus por completar o percurso
 

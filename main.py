@@ -21,7 +21,7 @@ game = a11y.Game(repeat=False)
 SETTINGS_FILE = os.path.join(game.save_dir, "config.json")
 BOARD = "pontos"
 DIRS = ("up", "down", "left", "right")
-SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7, "curva_esq": 0.5, "curva_dir": 0.5, "freada": 0.7}
+SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7, "curva_esq": 0.5, "curva_dir": 0.5, "freada": 0.4}
 MUSIC_LEVELS = (("alta", 1.0), ("média", 0.6), ("baixa", 0.3), ("desligada", 0.0))
 
 

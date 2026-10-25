@@ -247,10 +247,15 @@ def alerts():
     write("pular_agora", knock(310, 0.26, heavy=True))
     # freada: cantar de pneu (gravação CC0); o laço dura a freada inteira
     tire = original("freada_1_bigsoundbank.wav")
-    chirp = normalize(fade(tire[n(0.05):n(0.30)], 0.005, 0.06), 0.85)
-    write("freada", chirp)
-    write("freada_agora", normalize(add(fade(tire[n(0.05):n(0.45)], 0.005, 0.1),
-                                        gain(repitch(fade(tire[n(0.05):n(0.45)], 0.005, 0.1), 0.8), 0.6)), 0.95))
+    # a batida precisa de ataque para dar ritmo: um golpe seco de borracha na frente do guincho
+    def hit(vol):
+        return gain(add(thud(120, 0.1, 0.02),
+                        mul(biquad(white(0.1), "band", 1800, 1.2), decay(n(0.1), 0.01, 0.0003))), vol)
+    squeal = fade(tire[n(0.08):n(0.28)], 0.002, 0.07)
+    write("freada", normalize(add(hit(1.0), gain(squeal, 0.8)), 0.9))
+    long = fade(tire[n(0.08):n(0.42)], 0.002, 0.1)
+    write("freada_agora", normalize(add(hit(1.6), gain(long, 0.9),
+                                        gain(repitch(long, 0.8), 0.5)), 0.95))
     write("freada_loop", normalize(loop_seamless(tire[n(0.25):n(1.95)], 0.2), 0.7))
     # rampa: sopro de vento (gravação CC0) acelerado de modo a subir de altura durante o som
     wind = original("rampa_1_bigsoundbank.wav")
