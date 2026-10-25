@@ -127,8 +127,8 @@ class Run:
         if not self.can_act:
             return None
         target = self._window()
-        if kind == "escada" and target is None:
-            return None             # sem escada à frente, segurar X não leva a nada
+        if kind in C.HOLD_KINDS and target is None:
+            return None             # sem escada nem curva à frente, segurar o botão não leva a nada
         rail = target is not None and target.kind == "corrimao" and kind == "pular"
         if target is not None and target.kind != kind and not rail:
             self.obstacles.remove(target)
@@ -237,7 +237,7 @@ class Run:
     def _brief_text(self, kind):
         info = KIND_INFO[kind]
         name = SCENARIOS[self.scenario]["objetos"].get(kind, info["nome"])
-        return ("Novo obstáculo: %s, para %s. Avisa com %s, em quatro batidas. %s"
+        return ("Novo obstáculo: %s, para %s. Avisa com %s, em três batidas. %s"
                 % (name, info["verbo"], info["som"], info["dica"]))
 
     def _holds(self):
@@ -293,8 +293,8 @@ class Run:
         self._crouch_until = self.t + info["busy"] if kind == "agachar" else 0.0
         if rail:
             self._rail = {"land": self.t + C.RAIL_JUMP}
-        elif kind == "escada":
-            self._hold = {"kind": "escada", "button": "x", "end": self.t + C.STAIR_TIME}
+        elif info.get("hold"):
+            self._hold = {"kind": kind, "button": info["button"], "end": self.t + info["hold"]}
         if info["air"]:
             self._air_until = self.t + info["air"]
             self._in_air = True
@@ -336,7 +336,7 @@ class Run:
     def _rolling(self):
         surface, volume = "rodas", 1.0
         if self._hold is not None:
-            surface = "grind" if self._hold["kind"] == "corrimao" else "degraus"
+            surface = SURFACE.get(self._hold["kind"], "rodas")
         elif self.t < self._fall_until or self._rail is not None or self.airborne:
             volume = 0.0
         elif self._crouch_until > self.t:
@@ -394,8 +394,10 @@ class Run:
                    plural(self.falls, "tombo", "tombos"), self.best_combo))
 
 
+SURFACE = {"corrimao": "grind", "escada": "degraus", "curva_esq": "curva_esq", "curva_dir": "curva_dir"}
 START_SOUND = {"pular": "pulo", "agachar": "agacha", "corrimao": "pulo",
-               "rampa": "rampa_sobe", "escada": "degraus_entra"}
+               "rampa": "rampa_sobe", "escada": "degraus_entra",
+               "curva_esq": "curva_entra", "curva_dir": "curva_entra"}
 
 
 def lives_text(n):

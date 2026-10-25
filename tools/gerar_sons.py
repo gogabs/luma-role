@@ -7,13 +7,14 @@ arquivos têm a mesma licença do jogo e não pedem crédito a ninguém.
 Quem joga sem estéreo precisa distinguir os obstáculos só pelo som, então
 cada ação tem um desenho próprio de timbre, altura e contorno:
 
-  pular     batida seca de madeira, grave, sempre a mesma nota
-  agachar   assobio que desce
-  rampa     assobio que sobe
-  corrimão  sininho metálico agudo
-  escada    três notas descendo, como degraus
+  pular     batida seca de madeira, sempre a mesma nota
+  agachar   assobio grave que desce
+  rampa     assobio que sobe, mais agudo
+  corrimão  pancada de barra de metal (gravação)
+  escada    três pancadas de madeira descendo, como degraus (gravação)
+  curvas    corneta: nota grave para a esquerda, aguda para a direita
 
-O aviso toca em quatro batidas; a quarta (nome_agora) é a mesma figura com
+O aviso toca em três batidas; a terceira (nome_agora) é a mesma figura com
 corpo a mais. A música tem 5 camadas de mesmo tamanho por cenário: o jogo
 toca todas juntas e só abre o volume das que o combo já liberou.
 
@@ -209,17 +210,65 @@ def steps(notes, gap, heavy=False):
     return normalize(add(*parts), 0.85)
 
 
+def read_wav(path):
+    with wave.open(path) as w:
+        raw = w.readframes(w.getnframes())
+    return [v / 32768 for v in struct.unpack("<%dh" % (len(raw) // 2), raw)]
+
+
+def original(name):
+    return read_wav(os.path.join(HERE, "..", "sons-originais", name))
+
+
+def repitch(x, factor):
+    """Muda a altura (e a duração) por interpolação linear: factor 2 sobe uma oitava."""
+    out = []
+    for k in range(int((len(x) - 1) / factor)):
+        pos = k * factor
+        i = int(pos)
+        frac = pos - i
+        out.append(x[i] * (1 - frac) + x[i + 1] * frac)
+    return out
+
+
+def horn(f, sec, heavy=False):
+    """Corneta: serra filtrada com um pouco de vibrato e ataque rápido."""
+    x = osc(saw, f, sec, vibrato=0.006, vib_rate=6.0)
+    x = biquad(x, "low", f * 5, 1.1)
+    if heavy:
+        x = add(x, gain(osc(saw, f * 1.5, sec), 0.35))
+        x = biquad(x, "low", f * 5, 1.1)
+    env = [min(1.0, k / n(0.012)) * (0.85 + 0.15 * math.exp(-k / (RATE * 0.12))) for k in range(len(x))]
+    return normalize(fade(mul(x, env), 0.01, sec * 0.35), 0.8)
+
+
 def alerts():
     write("pular", knock(310, 0.16))
     write("pular_agora", knock(310, 0.26, heavy=True))
-    write("agachar", whistle(1250, 520, 0.26))
-    write("agachar_agora", whistle(1250, 420, 0.32, heavy=True))
+    write("agachar", whistle(560, 200, 0.26))
+    write("agachar_agora", whistle(560, 170, 0.32, heavy=True))
     write("rampa", whistle(380, 1150, 0.26))
     write("rampa_agora", whistle(380, 1300, 0.32, heavy=True))
-    write("corrimao", bell(1760, 0.45))
-    write("corrimao_agora", bell(1760, 0.6, heavy=True))
-    write("escada", steps((784, 659, 523), 0.07))
-    write("escada_agora", steps((784, 659, 523, 392), 0.07, heavy=True))
+    # corrimão: barra de metal batida (wallpole, gravação), e a da hora com uma segunda barra mais aguda
+    pole = normalize(original("wallpole_1_sbyw.wav"), 0.85)
+    write("corrimao", pole)
+    write("corrimao_agora", normalize(add(pole, gain(repitch(pole, 1.5), 0.7),
+                                          gain(repitch(pole, 0.5), 0.5)), 0.9))
+    # escada: três pancadas de madeira (wallwood) descendo, uma por degrau
+    wood = original("wallwood_1_sbyw.wav")[:n(0.17)]
+    wood = normalize(fade(wood, 0.001, 0.07), 0.9)
+    hits = [delay(gain(repitch(wood, f), 0.9 - 0.08 * i), i * 0.08) for i, f in enumerate((1.3, 1.0, 0.77))]
+    write("escada", normalize(add(*hits), 0.9))
+    write("escada_agora", normalize(add(*hits, delay(gain(repitch(wood, 0.55), 1.0), 0.2)), 0.95))
+    # curvas: corneta grave (esquerda) e aguda (direita)
+    for side, f in (("esq", 196.0), ("dir", 523.0)):
+        write("curva_" + side, horn(f, 0.24))
+        write("curva_%s_agora" % side, horn(f, 0.36, heavy=True))
+        hum = osc(tri, f, 1.4, vibrato=0.004, vib_rate=5.0)
+        hum = add(hum, gain(osc(saw, f * 2.0, 1.4), 0.2))
+        hum = biquad(hum, "low", f * 3, 0.9)
+        write("curva_%s_loop" % side, normalize(loop_seamless(hum, 0.2), 0.55))
+    write("curva_entra", normalize(mul(biquad(white(0.3), "band", 900, 1.0), fade([1.0] * n(0.3), 0.08, 0.2)), 0.5))
 
 
 # --- o que o patinador faz e sente ----------------------------------------------
@@ -227,12 +276,6 @@ def thud(f, sec, tau=0.07):
     size = n(sec)
     return add(mul(glide(f * 1.6, f, sec), decay(size, tau, 0.001)),
                gain(mul(biquad(white(sec), "low", 900), decay(size, 0.015, 0.0005)), 0.8))
-
-
-def read_wav(path):
-    with wave.open(path) as w:
-        raw = w.readframes(w.getnframes())
-    return [v / 32768 for v in struct.unpack("<%dh" % (len(raw) // 2), raw)]
 
 
 def clack(f, sec=0.2):

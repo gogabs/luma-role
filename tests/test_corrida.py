@@ -78,12 +78,12 @@ class CorridaTest(unittest.TestCase):
         self.assertLess(beat_at(120), beat_at(10))
         self.assertGreaterEqual(beat_at(10_000), C.MIN_BEAT)
 
-    def test_four_beats_the_last_one_is_the_action(self):
+    def test_three_beats_the_last_one_is_the_action(self):
         ui = FakeUI()
         r = fresh(ui, [("pular", 5.0)])
         advance_to(r, 5.01)
-        self.assertEqual(ui.names()[:4], ["pular", "pular", "pular", "pular_agora"])
-        self.assertEqual([c[1] for c in ui.cues[:4]], list(C.CUE_VOLUMES))
+        self.assertEqual(ui.names()[:3], ["pular", "pular", "pular_agora"])
+        self.assertEqual([c[1] for c in ui.cues[:3]], list(C.CUE_VOLUMES))
 
     def test_matching_action_in_the_beat_clears(self):
         ui = FakeUI()
@@ -243,7 +243,7 @@ class CorridaTest(unittest.TestCase):
             if r.over:
                 return
             if r._hold is None and r._rail is None and r.t >= r._busy_until:
-                for b in ("a", "x"):
+                for b in ("a", "x", "left", "right"):
                     if b in r.held:
                         r.button_up(b)
             if r.obstacles and r.can_act:
@@ -252,9 +252,9 @@ class CorridaTest(unittest.TestCase):
                     if o.kind == "corrimao":
                         r.button_down("a")
                         r.action("pular")
-                    elif o.kind == "escada":
-                        r.button_down("x")
-                        r.action("escada")
+                    elif o.kind in C.HOLD_KINDS:
+                        r.button_down(C.KINDS[o.kind]["button"])
+                        r.action(o.kind)
                     else:
                         r.action(o.kind)
             if tricks and r.airborne and r.t - r._trick_until > 0.02:
@@ -287,7 +287,8 @@ class CorridaTest(unittest.TestCase):
     def test_only_the_scenario_objects_appear(self):
         r = Run(FakeUI(), seed=4, seen=set(ALL_SEEN), scenarios_seen={0, 1, 2, 3})
         r.obstacles = []
-        kinds = []
+        r._in_scenario = 0
+        r._plan_scenario = 0
         for i in range(C.PER_SCENARIO):
             r._plan_one()
         kinds = {o.kind for o in r.obstacles}
@@ -299,7 +300,7 @@ class CorridaTest(unittest.TestCase):
         advance_to(r, 5.0)
         r.button_down("x")
         self.assertEqual(r.action("escada"), "perfeito")
-        advance_to(r, 5.0 + C.STAIR_TIME / 2)
+        advance_to(r, 5.0 + C.KINDS["escada"]["hold"] / 2)
         self.assertEqual(ui.surface, "degraus")
         r.button_up("x")                                  # soltou no meio
         self.assertEqual(r.lives, C.LIVES - 1)
@@ -312,7 +313,7 @@ class CorridaTest(unittest.TestCase):
         r.button_down("x")
         r.action("escada")
         score = r.score
-        advance_to(r, 5.0 + C.STAIR_TIME + 0.05)
+        advance_to(r, 5.0 + C.KINDS["escada"]["hold"] + 0.05)
         r.button_up("x")
         self.assertEqual(r.lives, C.LIVES)
         self.assertGreater(r.score, score)
@@ -361,6 +362,38 @@ class CorridaTest(unittest.TestCase):
         advance_to(r, 5.6)
         self.assertEqual(r.lives, C.LIVES - 1)
 
+    def test_curve_side_is_told_by_pitch_name_and_needs_the_right_button_held(self):
+        ui = FakeUI()
+        r = fresh(ui, [("curva_esq", 5.0), ("curva_dir", 12.0), ("pular", 30.0)])
+        advance_to(r, 5.02)
+        self.assertEqual({n for n in ui.names()}, {"curva_esq", "curva_esq_agora"})
+        r.button_down("left")
+        self.assertEqual(r.action("curva_esq"), "perfeito")
+        advance_to(r, 5.0 + 0.5)
+        self.assertEqual(ui.surface, "curva_esq")
+        advance_to(r, 5.0 + C.KINDS["curva_esq"]["hold"] + 0.05)
+        r.button_up("left")
+        self.assertEqual(r.lives, C.LIVES)
+        advance_to(r, 12.0)
+        r.button_down("left")
+        self.assertEqual(r.action("curva_esq"), "tombo")    # o lado errado
+
+    def test_curve_released_early_falls(self):
+        r = fresh(None, [("curva_dir", 5.0), ("pular", 30.0)])
+        advance_to(r, 5.0)
+        r.button_down("right")
+        r.action("curva_dir")
+        advance_to(r, 5.5)
+        r.button_up("right")
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_left_right_without_a_curve_do_nothing(self):
+        r = fresh(None, [("pular", 30.0)])
+        advance_to(r, 3.0)
+        self.assertIsNone(r.action("curva_esq"))
+        self.assertIsNone(r.action("curva_dir"))
+        self.assertEqual(r.lives, C.LIVES)
+
     def test_trick_announces_its_name(self):
         ui = FakeUI()
         r = fresh(ui, [("rampa", 3.0), ("pular", 20.0)])
@@ -385,7 +418,8 @@ class SonsTest(unittest.TestCase):
         from pista.corrida import START_SOUND
         wanted = set(KIND_ORDER) | {k + "_agora" for k in KIND_ORDER} | set(START_SOUND.values())
         wanted |= {"acerto", "perfeito", "trick", "trick_tarde", "pouso", "pouso_limpo", "tombo",
-                   "rodas_loop", "degraus_loop", "grind_loop", "grind_entra", "fim",
+                   "rodas_loop", "degraus_loop", "grind_loop", "grind_entra", "curva_entra",
+                   "curva_esq_loop", "curva_dir_loop", "fim",
                    "menu_mover", "menu_confirmar"}
         wanted |= {"musica_%s_%d" % (sc["id"], i) for sc in SCENARIOS for i in range(5)}
         folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sounds")

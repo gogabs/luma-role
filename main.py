@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rolê: patinação urbana só com som. Quatro batidas avisam; aperte na quarta."""
+"""Rolê: patinação urbana só com som. Três batidas avisam; aperte na terceira."""
 import json
 import os
 import sys
@@ -21,7 +21,7 @@ game = a11y.Game(repeat=False)
 SETTINGS_FILE = os.path.join(game.save_dir, "config.json")
 BOARD = "pontos"
 DIRS = ("up", "down", "left", "right")
-SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7}
+SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7, "curva_esq": 0.5, "curva_dir": 0.5}
 MUSIC_LEVELS = (("alta", 1.0), ("média", 0.6), ("baixa", 0.3), ("desligada", 0.0))
 
 
@@ -140,7 +140,7 @@ ui = UI()
 
 
 def demo(kind, then=None):
-    """Toca as quatro batidas do obstáculo, como na corrida, e chama then()."""
+    """Toca as três batidas do obstáculo, como na corrida, e chama then()."""
     state["demo"] += 1
     token = state["demo"]
     for i in range(C.WARN_BEATS + 1):
@@ -257,7 +257,8 @@ help_menu = a11y.Menu(
     on_back=close_help, sounds=menu_sounds)
 
 
-LEARN_BUTTONS = {"pular": "b", "agachar": "down", "rampa": "up", "corrimao": "b e a", "escada": "x"}
+LEARN_BUTTONS = {"pular": "b", "agachar": "down", "rampa": "up", "corrimao": "b e a", "escada": "x",
+                 "curva_esq": "left", "curva_dir": "right"}
 
 
 def learn_item(kind):

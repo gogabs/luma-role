@@ -1,12 +1,12 @@
 """Números da corrida. Tempos em segundos."""
 
-# Ritmo: cada obstáculo avisa em 3 batidas e a quarta, mais forte, é a hora de agir.
+# Ritmo: cada obstáculo avisa com 3 batidas do mesmo som; a terceira, mais forte, é a hora de agir.
 BEAT = 0.5                # intervalo entre as batidas no começo
 MIN_BEAT = 0.3            # e o mais curto que chega, na velocidade máxima
 SPEED_GAIN = 0.7          # a velocidade vai de 1.0 até 1.0 + isto
 SPEED_TAU = 100.0         # constante de tempo (s) da subida
-WARN_BEATS = 3            # batidas de aviso antes da hora de agir
-CUE_VOLUMES = (0.5, 0.65, 0.8, 1.0)   # as 3 de aviso e a da hora
+WARN_BEATS = 2            # batidas de aviso antes da hora de agir (a terceira é a hora)
+CUE_VOLUMES = (0.6, 0.8, 1.0)   # as 2 de aviso e a da hora
 
 # Janela de acerto, em fração da batida (com um mínimo, para a velocidade máxima)
 EARLY = 0.7
@@ -21,14 +21,17 @@ KINDS = {
     "agachar":  {"button": "down", "air": 0.0,  "busy": 0.5,  "extra": 0},
     "corrimao": {"button": "a",    "air": 0.0,  "busy": 1.7,  "extra": 80},
     "rampa":    {"button": "up",   "air": 1.35, "busy": 1.35, "extra": 120},
-    "escada":   {"button": "x",    "air": 0.0,  "busy": 1.4,  "extra": 60},
+    "escada":   {"button": "x",    "air": 0.0,  "busy": 1.4,  "extra": 60, "hold": 1.4},
+    "curva_esq": {"button": "left", "air": 0.0, "busy": 1.4,  "extra": 40, "hold": 1.4},
+    "curva_dir": {"button": "right", "air": 0.0, "busy": 1.4, "extra": 40, "hold": 1.4},
 }
 # Quem começa cada ação. O corrimão começa com B (o salto) e o A é só segurado; a
 # escada começa com X, que fica segurado até o fim.
-BUTTON_KIND = {"b": "pular", "down": "agachar", "up": "rampa", "x": "escada"}
+BUTTON_KIND = {"b": "pular", "down": "agachar", "up": "rampa", "x": "escada",
+               "left": "curva_esq", "right": "curva_dir"}
+HOLD_KINDS = tuple(k for k, v in KINDS.items() if v.get("hold"))   # segurados até o fim
 
 # Escada e corrimão pedem segurar o botão até o fim; soltar antes é tombo.
-STAIR_TIME = 1.4          # percurso da escada, com X segurado
 RAIL_JUMP = 0.3           # do salto (B) até pousar no corrimão; o A precisa estar segurado aí
 RAIL_TIME = 1.4           # o grind, com A segurado
 RELEASE_GRACE = 0.08      # soltar no fim, com esta folga, ainda vale

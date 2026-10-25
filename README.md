@@ -1,8 +1,8 @@
 # Rolê
 
 Patinação urbana só com som, para o R36S acessível. Você patina sozinho, cada
-vez mais rápido, e escuta os obstáculos chegando: **quatro batidas** do mesmo
-som avisam, cada uma mais forte, e é na **quarta** que se aperta.
+vez mais rápido, e escuta os obstáculos chegando: **três batidas** do mesmo
+som avisam, cada uma mais forte, e é na **terceira** que se aperta.
 
 Não precisa de estéreo nem de fone: cada obstáculo tem um som só dele, e o que
 muda de um para outro é o timbre e a altura, como no Rio Abaixo. O estéreo só
@@ -29,16 +29,16 @@ zera o combo, tira as camadas e custa uma de três vidas.
 A corrida passa por quatro cenários, cada um com música e obstáculos próprios:
 **praça** (banco, galho, rampa), **rua** (+ corrimão), **estacionamento** (+ escada)
 e **escola** (tudo). Depois volta à praça, mais rápido. Na primeira vez que um
-cenário ou um obstáculo aparece, o jogo para, explica e toca as quatro batidas
+cenário ou um obstáculo aparece, o jogo para, explica e toca as três batidas
 de exemplo. O menu "Aprender os sons" repete isso quando quiser.
 
 ## Controles
 
 | Botão | O quê |
 |---|---|
-| B / Baixo / Cima | Pular / passar rente / rampa (na quarta batida) |
-| B e segurar A | Corrimão: salto na quarta batida, A segurado no grind |
-| Segurar X | Escada: apertar na quarta batida e segurar até o fim |
+| B / Baixo / Cima | Pular / passar rente / rampa (na terceira batida) |
+| B e segurar A | Corrimão: salto na terceira batida, A segurado no grind |
+| Segurar X | Escada: apertar na terceira batida e segurar até o fim |
 | Y (com ou sem direcional) | Manobra no ar |
 | Select | Pontos, combo, multiplicador e vidas |
 | Start | Pausa (dá para mudar o volume da música) |
