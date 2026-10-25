@@ -16,11 +16,11 @@ HELP = (
     ("Segurar botão",
      "A escada e o corrimão pedem que você segure o botão. Na escada, aperte X na terceira "
      "batida e segure enquanto ouvir os degraus. No corrimão, aperte B na terceira batida para "
-     "saltar e segure A: o grind soa como metal raspando. Quando o som acabar, solte. "
+     "saltar e segure A: o grind soa como metal raspando. Quando ouvir um toque agudo de duas notas subindo, solte. "
      "Soltar antes do fim, ou não estar segurando A ao pousar, é tombo."),
     ("Curvas",
      "A curva avisa com uma nota de corneta: grave é para a esquerda, aguda é para a direita. "
-     "Na terceira batida, aperte esquerda ou direita e segure enquanto a corneta zumbir. "
+     "Na terceira batida, aperte esquerda ou direita e segure enquanto a corneta zumbir, até o toque agudo de duas notas. "
      "Soltar antes, ou apertar o lado errado, é tombo."),
     ("Manobras",
      "No ar, depois de pular ou pegar a rampa, aperte Y para fazer uma "

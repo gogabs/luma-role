@@ -252,7 +252,8 @@ class Run:
         if hold is not None and self.t >= hold["end"]:
             self._hold = None
             self.score += C.POINTS_HOLD * multiplier(self.combo)
-            self.ui.cue("pouso", 1.0, 1.0, None)
+            self.ui.cue("solte", 1.0, 1.0, None)
+            self.ui.cue("pouso", 0.7, 1.0, None)
 
     def _landing(self):
         if self._in_air and self.t >= self._air_until:

@@ -361,6 +361,10 @@ def skating():
 
 
 def feedback():
+    # solte: sinal de fim de percurso (curva, escada ou grind), duas notas agudas subindo
+    ping = add(mul(sine(1175, 0.3), decay(n(0.3), 0.08, 0.001)),
+               delay(mul(sine(1760, 0.3), decay(n(0.3), 0.1, 0.001)), 0.09))
+    write("solte", normalize(ping, 0.8))
     write("acerto", normalize(mul(sine(880, 0.12), decay(n(0.12), 0.04, 0.001)), 0.5))
     spark = add(mul(sine(1175, 0.3), decay(n(0.3), 0.07, 0.001)),
                 delay(mul(sine(1760, 0.3), decay(n(0.3), 0.09, 0.001)), 0.05),

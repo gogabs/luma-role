@@ -313,7 +313,10 @@ class CorridaTest(unittest.TestCase):
         r.button_down("x")
         r.action("escada")
         score = r.score
+        advance_to(r, 5.0 + C.KINDS["escada"]["hold"] - 0.05)
+        self.assertNotIn("solte", ui.names())
         advance_to(r, 5.0 + C.KINDS["escada"]["hold"] + 0.05)
+        self.assertIn("solte", ui.names())
         r.button_up("x")
         self.assertEqual(r.lives, C.LIVES)
         self.assertGreater(r.score, score)
@@ -418,7 +421,7 @@ class SonsTest(unittest.TestCase):
         from pista.corrida import START_SOUND
         wanted = set(KIND_ORDER) | {k + "_agora" for k in KIND_ORDER} | set(START_SOUND.values())
         wanted |= {"acerto", "perfeito", "trick", "trick_tarde", "pouso", "pouso_limpo", "tombo",
-                   "rodas_loop", "degraus_loop", "grind_loop", "grind_entra", "curva_entra",
+                   "solte", "rodas_loop", "degraus_loop", "grind_loop", "grind_entra", "curva_entra",
                    "curva_esq_loop", "curva_dir_loop", "fim",
                    "menu_mover", "menu_confirmar"}
         wanted |= {"musica_%s_%d" % (sc["id"], i) for sc in SCENARIOS for i in range(5)}

@@ -16,7 +16,7 @@ complementa (as manobras soam à esquerda ou à direita conforme o direcional).
 | Sininho metálico agudo | **Corrimão**: salte com B e **segure A** durante o grind | B, depois A |
 | Três notas descendo, como degraus | **Escada**: **segure X** por todo o percurso | X |
 
-Escada e corrimão pedem segurar o botão até o som acabar (degraus ou metal raspando); soltar antes, ou pousar no corrimão sem A, é tombo.
+Escada e corrimão pedem segurar o botão até o som acabar (degraus ou metal raspando); um toque agudo de duas notas subindo avisa a hora de soltar; soltar antes, ou pousar no corrimão sem A, é tombo.
 
 No ar (depois de pular ou da rampa), **Y** faz uma manobra; Y com um
 direcional faz outra. Cada uma toca uma nota diferente e o jogo fala o nome (giro de 180, 360 para a esquerda, 360 para a direita, mute grab, fishbrain). Uma manobra dura um

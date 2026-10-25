@@ -37,16 +37,16 @@ KIND_INFO = {
               "dica": "Aperte para cima na terceira batida para pegar a rampa. O voo é longo: dá tempo de fazer manobras."},
     "corrimao": {"nome": "corrimão", "verbo": "deslizar no corrimão",
                  "som": "um sininho agudo",
-                 "dica": "Na terceira batida, aperte B para saltar e segure A para deslizar até o corrimão acabar. Soltar antes é tombo."},
+                 "dica": "Na terceira batida, aperte B para saltar e segure A para deslizar até o toque agudo de duas notas. Soltar antes é tombo."},
     "curva_esq": {"nome": "curva à esquerda", "verbo": "fazer a curva à esquerda",
                   "som": "uma nota grave de corneta",
-                  "dica": "Na terceira batida, aperte esquerda e segure até a curva acabar. Soltar antes, ou apertar o outro lado, é tombo."},
+                  "dica": "Na terceira batida, aperte esquerda e segure até o toque agudo de duas notas. Soltar antes, ou apertar o outro lado, é tombo."},
     "curva_dir": {"nome": "curva à direita", "verbo": "fazer a curva à direita",
                   "som": "uma nota aguda de corneta",
-                  "dica": "Na terceira batida, aperte direita e segure até a curva acabar. Soltar antes, ou apertar o outro lado, é tombo."},
+                  "dica": "Na terceira batida, aperte direita e segure até o toque agudo de duas notas. Soltar antes, ou apertar o outro lado, é tombo."},
     "escada": {"nome": "escada", "verbo": "descer a escada",
                "som": "três notas descendo, como degraus",
-               "dica": "Na terceira batida, aperte X e segure até a escada acabar. Soltar antes é tombo."},
+               "dica": "Na terceira batida, aperte X e segure até o toque agudo de duas notas. Soltar antes é tombo."},
 }
 
 KIND_ORDER = ("pular", "agachar", "rampa", "corrimao", "escada", "curva_esq", "curva_dir")
