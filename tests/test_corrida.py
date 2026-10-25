@@ -370,7 +370,7 @@ class CorridaTest(unittest.TestCase):
         r.trick(("left",))
         advance_to(r, 3.2 + C.TRICK_TIME + 0.01)
         r.trick(())
-        self.assertEqual(ui.said[-2:], ["kickflip", "shove-it"])
+        self.assertEqual(ui.said[-2:], ["360 para a esquerda", "giro de 180"])
 
     def test_status_text(self):
         r = Run(FakeUI(), seed=1, seen=set(ALL_SEEN), scenarios_seen={0})

@@ -19,7 +19,7 @@ complementa (as manobras soam à esquerda ou à direita conforme o direcional).
 Escada e corrimão pedem segurar o botão até o som acabar (degraus ou metal raspando); soltar antes, ou pousar no corrimão sem A, é tombo.
 
 No ar (depois de pular ou da rampa), **Y** faz uma manobra; Y com um
-direcional faz outra. Cada uma toca uma nota diferente e o jogo fala o nome (shove-it, kickflip, heelflip, indy grab, tail grab). Uma manobra dura um
+direcional faz outra. Cada uma toca uma nota diferente e o jogo fala o nome (giro de 180, 360 para a esquerda, 360 para a direita, mute grab, fishbrain). Uma manobra dura um
 quarto de segundo e precisa caber no voo. Se for tarde, um toque seco avisa e
 nada acontece. Cada vitória ou manobra sobe o **combo**; a cada quatro, o
 multiplicador de pontos sobe (até 5×). A música ganha uma camada nova com o

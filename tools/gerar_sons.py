@@ -236,7 +236,7 @@ def read_wav(path):
 
 
 def clack(f, sec=0.2):
-    """Tábua batendo em metal ou pedra: estalo agudo e um toque que soa."""
+    """Patim batendo em metal: estalo agudo e um toque que soa."""
     size = n(sec)
     snap = mul(biquad(white(sec), "high", 2800), decay(size, 0.006, 0.0003))
     ring = add(mul(sine(f, sec), decay(size, 0.05, 0.001)),
@@ -251,13 +251,14 @@ def place_loop(track, at, sound):
 
 
 def skating():
-    # ollie: a cauda bate no chão (estalo seco) e a tábua sobe com um toque de madeira
+    # salto de patins: o impulso das rodas (pancada surda) e o zumbido delas subindo ao deixar o chão
     size = n(0.2)
-    pop = add(gain(mul(biquad(white(0.2), "band", 2400, 1.2), decay(size, 0.012, 0.0003)), 1.0),
-              gain(mul(glide(210, 150, 0.2), decay(size, 0.06, 0.001)), 0.9),
-              delay(gain(mul(biquad(white(0.1), "band", 900, 1.0), decay(n(0.1), 0.03, 0.002)), 0.5), 0.05))
+    whirr = mul(biquad(white(0.2), "band", 1500, 2.0), fade([1.0] * size, 0.12, 0.08))
+    pop = add(gain(mul(glide(190, 120, 0.2), decay(size, 0.05, 0.001)), 1.0),
+              gain(mul(biquad(white(0.2), "low", 1800), decay(size, 0.012, 0.0005)), 0.7),
+              gain(whirr, 0.45))
     write("pulo", normalize(pop, 0.8))
-    # pouso: as quatro rodas e a tábua tocam o chão, com o chocalho dos eixos
+    # pouso: as rodas tocam o chão, com o chocalho dos eixos
     land = add(thud(125, 0.22, 0.05),
                delay(gain(thud(110, 0.2, 0.04), 0.6), 0.035),
                gain(mul(biquad(white(0.25), "band", 3200, 1.5),
@@ -303,7 +304,7 @@ def skating():
         place_loop(track, at + n(0.075), gain(thud(105, 0.12, 0.025), 1.0))
     write("rodas_loop", normalize(track, 0.55))
 
-    # escada: degraus em sequência rápida, cada um um pouco diferente, com o chacoalhar da tábua
+    # escada: degraus em sequência rápida, cada um um pouco diferente, com o chacoalhar dos patins
     sec = 1.1
     size = n(sec)
     track = [v * 0.6 for v in loop_seamless(biquad(white(sec + 0.15), "band", 1500, 0.6), 0.15)][:size]

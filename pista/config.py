@@ -37,8 +37,8 @@ POINTS_HOLD = 60          # bônus por completar o percurso
 # Manobras: Y no ar, com o direcional (ou sem). Nota na escala pentatônica.
 TRICK_TIME = 0.25         # quanto dura uma manobra; precisa caber no que falta do voo
 TRICKS = {None: 1.0, "left": 1.122, "up": 1.26, "right": 1.498, "down": 1.682}
-TRICK_NAMES = {None: "shove-it", "left": "kickflip", "right": "heelflip",
-               "up": "indy grab", "down": "tail grab"}
+TRICK_NAMES = {None: "giro de 180", "left": "360 para a esquerda", "right": "360 para a direita",
+               "up": "mute grab", "down": "fishbrain"}
 TRICK_PAN = {"left": -0.6, "right": 0.6}
 TRICK_GRACE = 0.15        # o direcional apertado até isto antes do Y ainda vale
 
