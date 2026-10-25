@@ -24,6 +24,7 @@ class Obstacle:
         self.at = at            # hora de agir, em segundos de corrida
         self.beat = beat
         self.cues = 0           # quantas batidas já tocaram
+        self.side = None        # freada: para que lado derrapar ("left" ou "right")
 
     @property
     def early(self):
@@ -80,7 +81,6 @@ class Run:
         self._briefed = set()
         self._busy_until = 0.0
         self._air_until = 0.0
-        self._crouch_until = 0.0
         self._hold = None           # percurso com botão segurado (escada ou grind)
         self._rail = None           # salto para o corrimão, antes de pousar
         self._fall_until = 0.0
@@ -111,18 +111,28 @@ class Run:
         return not self.stopped and self.t >= self._busy_until
 
     def button_down(self, button):
+        hold = self._hold
+        if hold is not None and hold["kind"] == "freada" and button in ("left", "right"):
+            if self.t >= hold["at"] - 0.05 and not hold["got"] and not self.stopped:
+                if button == hold["side"]:
+                    hold["got"] = True
+                else:
+                    self.held.add(button)
+                    self._fall()          # o outro lado
+                    return
         self.held.add(button)
 
     def button_up(self, button):
         """Soltar o botão de um percurso (X na escada, A no grind) antes do fim é tombo."""
         self.held.discard(button)
         hold = self._hold
-        if (hold is not None and button == hold["button"] and not self.stopped
-                and self.t < hold["end"] - C.RELEASE_GRACE):
+        if hold is None or self.stopped or self.t >= hold["end"] - C.RELEASE_GRACE:
+            return
+        if button == hold["button"] or (hold.get("got") and button == hold["side"]):
             self._fall()
 
     def action(self, kind):
-        """pular, agachar, rampa ou escada (o corrimão começa com pular). Devolve "perfeito",
+        """pular, freada, rampa, escada ou curva (o corrimão começa com pular). Devolve "perfeito",
         "ok", "tombo", "livre" (sem obstáculo à vista) ou None (ignorado)."""
         if not self.can_act:
             return None
@@ -137,6 +147,8 @@ class Run:
         self._start(kind, rail)
         if target is None:
             return "livre"
+        if kind == "freada" and self._hold is not None:
+            self._hold.update(side=target.side, at=self.t + C.FREADA_INDICATOR, got=False, told=0)
         error = abs(self.t - target.at)
         self.obstacles.remove(target)
         perfect = error <= C.PERFECT
@@ -249,6 +261,14 @@ class Run:
             self._hold = {"kind": "corrimao", "button": "a", "end": self.t + C.RAIL_TIME}
             self.ui.cue("grind_entra", 1.0, 1.0, None)
         hold = self._hold
+        if hold is not None and hold["kind"] == "freada":
+            if hold["told"] < 2 and self.t >= hold["at"] + hold["told"] * C.FREADA_REPEAT:
+                hold["told"] += 1
+                self.ui.cue("curva_esq_agora" if hold["side"] == "left" else "curva_dir_agora",
+                            1.0, 1.0, None)
+            if not hold["got"] and self.t > hold["at"] + C.FREADA_DEADLINE:
+                self._fall()            # não escolheu o lado a tempo
+                return
         if hold is not None and self.t >= hold["end"]:
             self._hold = None
             self.score += C.POINTS_HOLD * multiplier(self.combo)
@@ -291,7 +311,6 @@ class Run:
     def _start(self, kind, rail=False):
         info = C.KINDS[kind]
         self._busy_until = self.t + (C.KINDS["corrimao"]["busy"] if rail else info["busy"])
-        self._crouch_until = self.t + info["busy"] if kind == "agachar" else 0.0
         if rail:
             self._rail = {"land": self.t + C.RAIL_JUMP}
         elif info.get("hold"):
@@ -306,7 +325,7 @@ class Run:
         self.combo = 0
         self.lives -= 1
         self.falls += 1
-        self._air_until = self._busy_until = self._crouch_until = 0.0
+        self._air_until = self._busy_until = 0.0
         self._hold = self._rail = None
         self._in_air = False
         self._flight = []
@@ -340,8 +359,6 @@ class Run:
             surface = SURFACE.get(self._hold["kind"], "rodas")
         elif self.t < self._fall_until or self._rail is not None or self.airborne:
             volume = 0.0
-        elif self._crouch_until > self.t:
-            volume = 0.4
         self.ui.rolling(volume, 0.8 + 0.4 * (self.speed - 1.0) / C.SPEED_GAIN, surface)
 
     # --- o que vem pela frente -------------------------------------------------
@@ -376,6 +393,8 @@ class Run:
         extra = self.rng.uniform(*C.EXTRA_GAP) / speed_at(self._cursor)
         at = self._cursor + C.WARN_BEATS * beat + extra
         o = Obstacle(kind, sc["objetos"][kind], at, beat)
+        if kind == "freada":
+            o.side = self.rng.choice(("left", "right"))
         self.obstacles.append(o)
         self._cursor = at + C.KINDS[kind]["busy"] + 0.3
         self._last_end = at + o.late
@@ -395,8 +414,8 @@ class Run:
                    plural(self.falls, "tombo", "tombos"), self.best_combo))
 
 
-SURFACE = {"corrimao": "grind", "escada": "degraus", "curva_esq": "curva_esq", "curva_dir": "curva_dir"}
-START_SOUND = {"pular": "pulo", "agachar": "agacha", "corrimao": "pulo",
+SURFACE = {"freada": "freada", "corrimao": "grind", "escada": "degraus", "curva_esq": "curva_esq", "curva_dir": "curva_dir"}
+START_SOUND = {"pular": "pulo", "freada": "curva_entra", "corrimao": "pulo",
                "rampa": "rampa_sobe", "escada": "degraus_entra",
                "curva_esq": "curva_entra", "curva_dir": "curva_entra"}
 

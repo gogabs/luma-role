@@ -11,8 +11,8 @@ complementa (as manobras soam à esquerda ou à direita conforme o direcional).
 | Som do aviso | Obstáculo | Botão |
 |---|---|---|
 | Batida seca de madeira, grave | Obstáculo baixo (banco, cone): **pular** | B |
-| Assobio que **desce** | Obstáculo alto (galho, cancela): **passar rente** | Baixo |
-| Assobio que **sobe** | **Rampa** | Cima |
+| Cantar de pneu | **Freada**: segure **Baixo**; no meio dela a corneta diz o lado (grave esquerda, aguda direita) e você aperta esse lado sem soltar Baixo | Baixo, depois esquerda ou direita |
+| Sopro de vento que **sobe** | **Rampa** | Cima |
 | Sininho metálico agudo | **Corrimão**: salte com B e **segure A** durante o grind | B, depois A |
 | Três notas descendo, como degraus | **Escada**: **segure X** por todo o percurso | X |
 
@@ -27,7 +27,7 @@ combo: bateria e baixo, chimbal, acordes, melodia e arpejo. Errar é um **tombo*
 zera o combo, tira as camadas e custa uma de três vidas.
 
 A corrida passa por quatro cenários, cada um com música e obstáculos próprios:
-**praça** (banco, galho, rampa), **rua** (+ corrimão), **estacionamento** (+ escada)
+**praça** (banco, freada, rampa), **rua** (+ corrimão), **estacionamento** (+ escada)
 e **escola** (tudo). Depois volta à praça, mais rápido. Na primeira vez que um
 cenário ou um obstáculo aparece, o jogo para, explica e toca as três batidas
 de exemplo. O menu "Aprender os sons" repete isso quando quiser.
@@ -36,7 +36,8 @@ de exemplo. O menu "Aprender os sons" repete isso quando quiser.
 
 | Botão | O quê |
 |---|---|
-| B / Baixo / Cima | Pular / passar rente / rampa (na terceira batida) |
+| B / Cima | Pular / rampa (na terceira batida) |
+| Segurar Baixo, depois esquerda ou direita | Freada e derrapagem para o lado dito pela corneta |
 | B e segurar A | Corrimão: salto na terceira batida, A segurado no grind |
 | Segurar X | Escada: apertar na terceira batida e segurar até o fim |
 | Y (com ou sem direcional) | Manobra no ar |

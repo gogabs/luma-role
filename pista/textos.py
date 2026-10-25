@@ -18,6 +18,11 @@ HELP = (
      "batida e segure enquanto ouvir os degraus. No corrimão, aperte B na terceira batida para "
      "saltar e segure A: o grind soa como metal raspando. Quando ouvir um toque agudo de duas notas subindo, solte. "
      "Soltar antes do fim, ou não estar segurando A ao pousar, é tombo."),
+    ("Freada",
+     "O cantar de pneu pede uma freada: na terceira batida, aperte e segure Baixo. No meio "
+     "da freada, a corneta toca duas vezes: nota grave, esquerda; nota aguda, direita. "
+     "Aperte esse lado sem soltar Baixo e segure os dois até o toque agudo de duas notas. "
+     "Escolher o lado errado, ou tarde, ou soltar antes do fim, é tombo."),
     ("Curvas",
      "A curva avisa com uma nota de corneta: grave é para a esquerda, aguda é para a direita. "
      "Na terceira batida, aperte esquerda ou direita e segure enquanto a corneta zumbir, até o toque agudo de duas notas. "
@@ -36,7 +41,7 @@ HELP = (
      "A corrida passa por quatro cenários, cada um com uma música: " +
      ", ".join(sc["nome"] for sc in SCENARIOS) + ". Depois da escola, volta à praça, mais rápido."),
     ("Botões",
-     "B pula. Para baixo se abaixa. Para cima pega a rampa. No corrimão, B salta e A fica "
+     "B pula. Baixo freia e, com o lado escolhido, derrapa. Para cima pega a rampa. No corrimão, B salta e A fica "
      "segurado durante o grind. Na escada, X fica segurado até o fim. Esquerda e direita fazem as curvas. Y faz manobra no ar. "
      "Select diz pontos, combo e vidas. Start pausa."),
 )

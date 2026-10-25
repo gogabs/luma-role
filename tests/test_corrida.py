@@ -56,6 +56,8 @@ def fresh(ui=None, kinds=(), seen=ALL_SEEN):
     ui = ui or FakeUI()
     r = Run(ui, seed=1, seen=set(seen), scenarios_seen={0, 1, 2, 3})
     r.obstacles = [Obstacle(k, k, at, 0.5) for k, at in kinds]
+    for o in r.obstacles:
+        o.side = "left" if o.kind == "freada" else None
     r._plan = lambda: None
     return r
 
@@ -96,15 +98,15 @@ class CorridaTest(unittest.TestCase):
         self.assertEqual(r.score, (C.POINTS_OBSTACLE + C.POINTS_PERFECT) * 1)
 
     def test_a_bit_off_is_ok_but_still_clears(self):
-        r = fresh(None, [("agachar", 5.0)])
+        r = fresh(None, [("rampa", 5.0)])
         advance_to(r, 5.0 - 0.2)
-        self.assertEqual(r.action("agachar"), "ok")
+        self.assertEqual(r.action("rampa"), "ok")
 
     def test_wrong_action_in_window_falls(self):
         ui = FakeUI()
         r = fresh(ui, [("pular", 5.0)])
         advance_to(r, 5.0)
-        self.assertEqual(r.action("agachar"), "tombo")
+        self.assertEqual(r.action("freada"), "tombo")
         self.assertEqual((r.lives, r.combo), (C.LIVES - 1, 0))
         self.assertIn("tombo", ui.names())
 
@@ -243,7 +245,7 @@ class CorridaTest(unittest.TestCase):
             if r.over:
                 return
             if r._hold is None and r._rail is None and r.t >= r._busy_until:
-                for b in ("a", "x", "left", "right"):
+                for b in ("a", "x", "left", "right", "down"):
                     if b in r.held:
                         r.button_up(b)
             if r.obstacles and r.can_act:
@@ -257,6 +259,10 @@ class CorridaTest(unittest.TestCase):
                         r.action(o.kind)
                     else:
                         r.action(o.kind)
+            hold = r._hold
+            if hold is not None and hold["kind"] == "freada" and not hold["got"] \
+                    and r.t >= hold["at"] + 0.2:
+                r.button_down(hold["side"])
             if tricks and r.airborne and r.t - r._trick_until > 0.02:
                 r.trick(("left",))
         run(r, seconds, dt, every=play)
@@ -380,6 +386,53 @@ class CorridaTest(unittest.TestCase):
         advance_to(r, 12.0)
         r.button_down("left")
         self.assertEqual(r.action("curva_esq"), "tombo")    # o lado errado
+
+    def _freada(self, side="left", ui=None):
+        ui = ui or FakeUI()
+        r = fresh(ui, [("freada", 5.0), ("pular", 30.0)])
+        r.obstacles[0].side = side
+        advance_to(r, 5.02)
+        r.button_down("down")
+        self.assertIn(r.action("freada"), ("perfeito", "ok"))
+        advance_to(r, r.t + 0.02)
+        return r, ui
+
+    def test_brake_then_the_side_told_by_the_horn(self):
+        r, ui = self._freada("left")
+        self.assertEqual(ui.surface, "freada")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + 0.05)
+        self.assertIn("curva_esq_agora", ui.names())        # grave = esquerda
+        r.button_down("left")
+        advance_to(r, 5.02 + C.KINDS["freada"]["hold"] + 0.05)
+        self.assertIn("solte", ui.names())
+        r.button_up("left")
+        r.button_up("down")
+        self.assertEqual(r.lives, C.LIVES)
+
+    def test_brake_wrong_side_falls(self):
+        r, ui = self._freada("right")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + 0.05)
+        self.assertIn("curva_dir_agora", ui.names())        # agudo = direita
+        r.button_down("left")
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_brake_without_choosing_a_side_falls(self):
+        r, ui = self._freada("left")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + C.FREADA_DEADLINE + 0.1)
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_brake_releasing_down_or_the_side_early_falls(self):
+        r, ui = self._freada("left")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + 0.1)
+        r.button_down("left")
+        r.button_up("down")
+        self.assertEqual(r.lives, C.LIVES - 1)
+        r, ui = self._freada("left")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + 0.1)
+        r.button_down("left")
+        advance_to(r, 5.02 + C.FREADA_INDICATOR + 0.5)
+        r.button_up("left")
+        self.assertEqual(r.lives, C.LIVES - 1)
 
     def test_curve_released_early_falls(self):
         r = fresh(None, [("curva_dir", 5.0), ("pular", 30.0)])

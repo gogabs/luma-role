@@ -8,8 +8,8 @@ Quem joga sem estéreo precisa distinguir os obstáculos só pelo som, então
 cada ação tem um desenho próprio de timbre, altura e contorno:
 
   pular     batida seca de madeira, sempre a mesma nota
-  agachar   assobio grave que desce
-  rampa     assobio que sobe, mais agudo
+  freada    cantar de pneu (gravação), mais a corneta dizendo o lado no meio da freada
+  rampa     sopro de vento que sobe (gravação acelerada)
   corrimão  pancada de barra de metal (gravação)
   escada    três pancadas de madeira descendo, como degraus (gravação)
   curvas    corneta: nota grave para a esquerda, aguda para a direita
@@ -245,10 +245,25 @@ def horn(f, sec, heavy=False):
 def alerts():
     write("pular", knock(310, 0.16))
     write("pular_agora", knock(310, 0.26, heavy=True))
-    write("agachar", whistle(560, 200, 0.26))
-    write("agachar_agora", whistle(560, 170, 0.32, heavy=True))
-    write("rampa", whistle(380, 1150, 0.26))
-    write("rampa_agora", whistle(380, 1300, 0.32, heavy=True))
+    # freada: cantar de pneu (gravação CC0); o laço dura a freada inteira
+    tire = original("freada_1_bigsoundbank.wav")
+    chirp = normalize(fade(tire[n(0.05):n(0.30)], 0.005, 0.06), 0.85)
+    write("freada", chirp)
+    write("freada_agora", normalize(add(fade(tire[n(0.05):n(0.45)], 0.005, 0.1),
+                                        gain(repitch(fade(tire[n(0.05):n(0.45)], 0.005, 0.1), 0.8), 0.6)), 0.95))
+    write("freada_loop", normalize(loop_seamless(tire[n(0.25):n(1.95)], 0.2), 0.7))
+    # rampa: sopro de vento (gravação CC0) acelerado de modo a subir de altura durante o som
+    wind = original("rampa_1_bigsoundbank.wav")
+    risers = []
+    for src, top in ((wind, 1.5), (original("rampa_2_bigsoundbank.wav"), 1.8)):
+        out, pos = [], 0.0
+        while pos < len(src) - 2:
+            i = int(pos)
+            out.append(src[i] * (1 - (pos - i)) + src[i + 1] * (pos - i))
+            pos += 0.85 + (top - 0.85) * pos / len(src)
+        risers.append(normalize(fade(out, 0.01, 0.05), 0.85))
+    write("rampa", risers[0])
+    write("rampa_agora", normalize(add(risers[1], gain(risers[0], 0.6)), 0.95))
     # corrimão: barra de metal batida (wallpole, gravação), e a da hora com uma segunda barra mais aguda
     pole = normalize(original("wallpole_1_sbyw.wav"), 0.85)
     write("corrimao", pole)
@@ -318,8 +333,6 @@ def skating():
     chime = add(mul(sine(1568, 0.3), decay(n(0.3), 0.07, 0.001)),
                 delay(mul(sine(2093, 0.3), decay(n(0.3), 0.09, 0.001)), 0.06))
     write("pouso_limpo", normalize(chime, 0.6))
-    tuck = mul(biquad(white(0.22), "band", 900, 1.0), fade([1.0] * n(0.22), 0.05, 0.12))
-    write("agacha", normalize(tuck, 0.5))
     swoosh = mul(biquad(white(0.45), "band", 600, 1.0), fade([1.0] * n(0.45), 0.35, 0.1))
     write("rampa_sobe", normalize(add(swoosh, gain(thud(150, 0.2, 0.05), 0.4)), 0.6))
 

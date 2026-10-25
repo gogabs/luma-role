@@ -68,7 +68,7 @@ def fake_run(self):
         run = state["run"]
         if state["phase"] == "run" and run is not None and not run.stopped and not self._focus:
             if run._hold is None and run._rail is None and run.t >= run._busy_until:
-                for b in ("a", "x", "left", "right"):
+                for b in ("a", "x", "left", "right", "down"):
                     if b in run.held:
                         self._dispatch_button(b, a11y.UP, 0)
             if run.obstacles and run.can_act:
@@ -77,11 +77,15 @@ def fake_run(self):
                     if o.kind == "corrimao":
                         self._dispatch_button("a", a11y.DOWN, 0)
                         press("b")
-                    elif o.kind in ("escada", "curva_esq", "curva_dir"):
-                        b = {"escada": "x", "curva_esq": "left", "curva_dir": "right"}[o.kind]
+                    elif o.kind in ("escada", "curva_esq", "curva_dir", "freada"):
+                        b = {"escada": "x", "curva_esq": "left", "curva_dir": "right", "freada": "down"}[o.kind]
                         self._dispatch_button(b, a11y.DOWN, 0)
                     else:
-                        press({"pular": "b", "agachar": "down", "rampa": "up"}[o.kind])
+                        press({"pular": "b", "rampa": "up"}[o.kind])
+            hold = run._hold
+            if hold is not None and hold["kind"] == "freada" and not hold["got"] \
+                    and run.t >= hold["at"] + 0.2:
+                self._dispatch_button(hold["side"], a11y.DOWN, 0)
             if run.airborne and run.t - run._trick_until > 0.02 and run._air_until - run.t > 0.26:
                 self._dispatch_button("left", a11y.DOWN, 0)
                 press("y")

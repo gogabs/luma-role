@@ -5,20 +5,20 @@
 SCENARIOS = (
     {"id": "praca", "nome": "Praça",
      "intro": "Praça. Calçada larga, bancos de madeira e árvores. Música tranquila.",
-     "objetos": {"pular": "banco", "agachar": "galho baixo", "rampa": "rampa de concreto"}},
+     "objetos": {"pular": "banco", "freada": "pombos na calçada", "rampa": "rampa de concreto"}},
     {"id": "rua", "nome": "Rua",
-     "intro": "Rua. Calçada movimentada, toldos e rampas de entrega. A música ganha mais batida.",
-     "objetos": {"pular": "lixeira caída", "agachar": "toldo baixo",
+     "intro": "Rua. Calçada movimentada, faixas de pedestres e rampas de entrega. A música ganha mais batida.",
+     "objetos": {"pular": "lixeira caída", "freada": "faixa de pedestres",
                  "rampa": "rampa de entrega", "corrimao": "corrimão da calçada",
                  "curva_esq": "esquina à esquerda", "curva_dir": "esquina à direita"}},
     {"id": "estacionamento", "nome": "Estacionamento",
-     "intro": "Estacionamento. Cones, cancelas e a escada da garagem. A música tem eco.",
-     "objetos": {"pular": "cone", "agachar": "cancela", "rampa": "rampa da garagem",
+     "intro": "Estacionamento. Cones, carros saindo das vagas e a escada da garagem. A música tem eco.",
+     "objetos": {"pular": "cone", "freada": "carro saindo da vaga", "rampa": "rampa da garagem",
                  "corrimao": "corrimão da rampa de pedestres", "escada": "escada da garagem",
                  "curva_esq": "curva da garagem à esquerda", "curva_dir": "curva da garagem à direita"}},
     {"id": "escola", "nome": "Escola",
-     "intro": "Escola. Mochilas no chão, bandeirinhas e a escadaria da entrada. A música é saltitante.",
-     "objetos": {"pular": "mochila no chão", "agachar": "varal de bandeirinhas",
+     "intro": "Escola. Mochilas no chão, crianças atravessando e a escadaria da entrada. A música é saltitante.",
+     "objetos": {"pular": "mochila no chão", "freada": "crianças atravessando",
                  "rampa": "rampa de acessibilidade", "corrimao": "corrimão do pátio",
                  "escada": "escadaria da entrada",
                  "curva_esq": "curva do pátio à esquerda", "curva_dir": "curva do pátio à direita"}},
@@ -29,11 +29,13 @@ KIND_INFO = {
     "pular": {"nome": "obstáculo baixo", "verbo": "pular",
               "som": "uma batida seca de madeira, sempre igual",
               "dica": "Aperte B na terceira batida para pular."},
-    "agachar": {"nome": "obstáculo alto", "verbo": "passar rente",
-                "som": "um assobio que desce",
-                "dica": "Aperte para baixo na terceira batida para se abaixar e passar rente."},
+    "freada": {"nome": "freada", "verbo": "frear e derrapar para um lado",
+               "som": "um cantar de pneu",
+               "dica": ("Na terceira batida, aperte e segure Baixo para frear. No meio da freada, "
+                        "uma nota de corneta diz o lado: grave é esquerda, aguda é direita. Aperte esse "
+                        "lado sem soltar Baixo e segure os dois até o toque agudo de duas notas.")},
     "rampa": {"nome": "rampa", "verbo": "pegar a rampa",
-              "som": "um assobio que sobe",
+              "som": "um sopro de vento que sobe",
               "dica": "Aperte para cima na terceira batida para pegar a rampa. O voo é longo: dá tempo de fazer manobras."},
     "corrimao": {"nome": "corrimão", "verbo": "deslizar no corrimão",
                  "som": "um sininho agudo",
@@ -49,4 +51,4 @@ KIND_INFO = {
                "dica": "Na terceira batida, aperte X e segure até o toque agudo de duas notas. Soltar antes é tombo."},
 }
 
-KIND_ORDER = ("pular", "agachar", "rampa", "corrimao", "escada", "curva_esq", "curva_dir")
+KIND_ORDER = ("pular", "freada", "rampa", "corrimao", "escada", "curva_esq", "curva_dir")

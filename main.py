@@ -21,7 +21,7 @@ game = a11y.Game(repeat=False)
 SETTINGS_FILE = os.path.join(game.save_dir, "config.json")
 BOARD = "pontos"
 DIRS = ("up", "down", "left", "right")
-SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7, "curva_esq": 0.5, "curva_dir": 0.5}
+SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7, "curva_esq": 0.5, "curva_dir": 0.5, "freada": 0.7}
 MUSIC_LEVELS = (("alta", 1.0), ("média", 0.6), ("baixa", 0.3), ("desligada", 0.0))
 
 
@@ -257,7 +257,7 @@ help_menu = a11y.Menu(
     on_back=close_help, sounds=menu_sounds)
 
 
-LEARN_BUTTONS = {"pular": "b", "agachar": "down", "rampa": "up", "corrimao": "b e a", "escada": "x",
+LEARN_BUTTONS = {"pular": "b", "freada": "down", "rampa": "up", "corrimao": "b e a", "escada": "x",
                  "curva_esq": "left", "curva_dir": "right"}
 
 

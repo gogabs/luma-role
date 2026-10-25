@@ -18,7 +18,7 @@ PERFECT = 0.1             # |erro| até aqui é "perfeito"
 # Cada ação: botão, tempo no ar (quando sobe), tempo ocupado e pontos extras
 KINDS = {
     "pular":    {"button": "b",    "air": 0.55, "busy": 0.55, "extra": 0},
-    "agachar":  {"button": "down", "air": 0.0,  "busy": 0.5,  "extra": 0},
+    "freada":   {"button": "down", "air": 0.0,  "busy": 1.9,  "extra": 70, "hold": 1.9},
     "corrimao": {"button": "a",    "air": 0.0,  "busy": 1.7,  "extra": 80},
     "rampa":    {"button": "up",   "air": 1.35, "busy": 1.35, "extra": 120},
     "escada":   {"button": "x",    "air": 0.0,  "busy": 1.4,  "extra": 60, "hold": 1.4},
@@ -27,13 +27,16 @@ KINDS = {
 }
 # Quem começa cada ação. O corrimão começa com B (o salto) e o A é só segurado; a
 # escada começa com X, que fica segurado até o fim.
-BUTTON_KIND = {"b": "pular", "down": "agachar", "up": "rampa", "x": "escada",
+BUTTON_KIND = {"b": "pular", "down": "freada", "up": "rampa", "x": "escada",
                "left": "curva_esq", "right": "curva_dir"}
 HOLD_KINDS = tuple(k for k, v in KINDS.items() if v.get("hold"))   # segurados até o fim
 
 # Escada e corrimão pedem segurar o botão até o fim; soltar antes é tombo.
 RAIL_JUMP = 0.3           # do salto (B) até pousar no corrimão; o A precisa estar segurado aí
 RAIL_TIME = 1.4           # o grind, com A segurado
+FREADA_INDICATOR = 0.6     # quanto depois do começo da freada a corneta diz o lado
+FREADA_REPEAT = 0.4       # e repete esta folga depois
+FREADA_DEADLINE = 0.7     # tempo para apertar o lado, contado do aviso
 RELEASE_GRACE = 0.08      # soltar no fim, com esta folga, ainda vale
 POINTS_HOLD = 60          # bônus por completar o percurso
 
