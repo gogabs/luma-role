@@ -21,6 +21,7 @@ game = a11y.Game(repeat=False)
 SETTINGS_FILE = os.path.join(game.save_dir, "config.json")
 BOARD = "pontos"
 DIRS = ("up", "down", "left", "right")
+SURFACE_GAIN = {"rodas": 0.5, "degraus": 0.7, "grind": 0.7}
 MUSIC_LEVELS = (("alta", 1.0), ("média", 0.6), ("baixa", 0.3), ("desligada", 0.0))
 
 
@@ -50,8 +51,7 @@ def save_settings():
 
 
 settings = load_settings()
-state = {"phase": "menu", "run": None, "rolling": None, "demo": 0}
-held = set()
+state = {"phase": "menu", "run": None, "rolling": {}, "demo": 0}
 
 sounds = {}
 for f in sorted(os.listdir(os.path.join(game.dir, "sounds"))):
@@ -122,11 +122,12 @@ class UI:
     def layers(self, n):
         music.set_layers(n, fade=0.4 if n > music.layers else 0.3)
 
-    def rolling(self, volume, pitch):
-        voice = state["rolling"]
-        if voice is not None:
-            voice.set_volume(0.5 * volume, fade=0.05)
-            voice.set_pitch(pitch)
+    def rolling(self, volume, pitch, surface="rodas"):
+        for name, voice in state["rolling"].items():
+            on = name == surface
+            voice.set_volume(SURFACE_GAIN[name] * volume if on else 0.0, fade=0.05)
+            if on:
+                voice.set_pitch(pitch)
 
     def remember(self):
         save_settings()
@@ -153,28 +154,29 @@ def demo(kind, then=None):
 # --- corrida -----------------------------------------------------------------------------
 def new_game():
     main_menu.close()
-    held.clear()
     run = Run(ui, seen=set(settings["seen"]), scenarios_seen=set(settings["scenarios_seen"]))
     state.update(phase="run", run=run)
-    state["rolling"] = sounds["rodas"].play(loop=True, volume=0.0)
+    state["rolling"] = {n: sounds[n + "_loop"].play(loop=True, volume=0.0) for n in SURFACE_GAIN}
     music.layers = 1
+
+
+def stop_surfaces():
+    for voice in state["rolling"].values():
+        voice.stop(fade=0.3)
+    state["rolling"] = {}
 
 
 def end_run():
     state["phase"] = "menu"
     state["run"] = None
     music.stop(fade=1.0)
-    if state["rolling"] is not None:
-        state["rolling"].stop(fade=0.3)
-        state["rolling"] = None
+    stop_surfaces()
 
 
 def finish(run):
     state["phase"] = "fim"
     music.stop(fade=1.5)
-    if state["rolling"] is not None:
-        state["rolling"].stop(fade=0.3)
-        state["rolling"] = None
+    stop_surfaces()
     save_settings()
 
     def result():
@@ -255,8 +257,12 @@ help_menu = a11y.Menu(
     on_back=close_help, sounds=menu_sounds)
 
 
+LEARN_BUTTONS = {"pular": "b", "agachar": "down", "rampa": "up", "corrimao": "b e a", "escada": "x"}
+
+
 def learn_item(kind):
-    return "%s, %s" % (KIND_INFO[kind]["nome"].capitalize(), game.button_label(C.KINDS[kind]["button"]))
+    label = " e ".join(game.button_label(b) for b in LEARN_BUTTONS[kind].split(" e "))
+    return "%s, %s" % (KIND_INFO[kind]["nome"].capitalize(), label)
 
 
 def close_learn():
@@ -289,7 +295,7 @@ def resume():
     pause_menu.close()
     run = state["run"]
     game.sound.resume_all()
-    game.say("Continuando.", on_done=lambda done: setattr(run, "halted", False))
+    game.say("Continuando.", on_done=lambda done: run.resume())
 
 
 def on_pause(index, item):
@@ -312,23 +318,24 @@ pause_menu = a11y.Menu(game, "Pausa", ["Continuar", music_item(), "Sair para o m
 # --- controles -------------------------------------------------------------------------
 @game.on_button
 def button(b, st, ms):
-    if b in DIRS:
-        if st == a11y.DOWN:
-            held.add(b)
-        elif st == a11y.UP:
-            held.discard(b)
-    if st != a11y.DOWN or state["phase"] != "run":
-        return
     run = state["run"]
+    if state["phase"] != "run" or run is None:
+        return
+    if st == a11y.UP:
+        run.button_up(b)
+        return
+    if st != a11y.DOWN:
+        return
     if run.paused:      # uma explicação está sendo falada
         return
+    run.button_down(b)
     if b in DIRS:
         run.direction(b)
     kind = C.BUTTON_KIND.get(b)
     if kind is not None:
         run.action(kind)
     elif b == "y":
-        run.trick(held)
+        run.trick()
     elif b == "select":
         game.say(run.status_text())
     elif b == "start":

@@ -67,11 +67,20 @@ def fake_run(self):
             fn(step)
         run = state["run"]
         if state["phase"] == "run" and run is not None and not run.stopped and not self._focus:
+            if run._hold is None and run._rail is None and run.t >= run._busy_until:
+                for b in ("a", "x"):
+                    if b in run.held:
+                        self._dispatch_button(b, a11y.UP, 0)
             if run.obstacles and run.can_act:
                 o = run.obstacles[0]
                 if run.t >= o.at + (0.7 if SLOPPY and o.name[0] in "abcdefg" else 0.0):
-                    press({"pular": "b", "agachar": "down", "rampa": "up",
-                           "corrimao": "a", "escada": "x"}[o.kind])
+                    if o.kind == "corrimao":
+                        self._dispatch_button("a", a11y.DOWN, 0)
+                        press("b")
+                    elif o.kind == "escada":
+                        self._dispatch_button("x", a11y.DOWN, 0)
+                    else:
+                        press({"pular": "b", "agachar": "down", "rampa": "up"}[o.kind])
             if run.airborne and run.t - run._trick_until > 0.02 and run._air_until - run.t > 0.26:
                 self._dispatch_button("left", a11y.DOWN, 0)
                 press("y")

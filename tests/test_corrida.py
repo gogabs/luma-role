@@ -14,6 +14,7 @@ class FakeUI:
         self.cues, self.said, self.briefs, self.layer, self.scenarios = [], [], [], 1, []
         self.rolls, self.finished, self.auto_resume = [], None, auto_resume
         self.resume = None
+        self.surface = "rodas"
 
     def cue(self, name, volume=1.0, pitch=1.0, pan=None):
         self.cues.append((name, volume, pitch, pan))
@@ -33,8 +34,9 @@ class FakeUI:
     def layers(self, n):
         self.layer = n
 
-    def rolling(self, volume, pitch):
+    def rolling(self, volume, pitch, surface="rodas"):
         self.rolls.append((volume, pitch))
+        self.surface = surface
 
     def remember(self):
         pass
@@ -240,10 +242,21 @@ class CorridaTest(unittest.TestCase):
         def play(r, i):
             if r.over:
                 return
+            if r._hold is None and r._rail is None and r.t >= r._busy_until:
+                for b in ("a", "x"):
+                    if b in r.held:
+                        r.button_up(b)
             if r.obstacles and r.can_act:
                 o = r.obstacles[0]
                 if r.t >= o.at + jitter:
-                    r.action(o.kind)
+                    if o.kind == "corrimao":
+                        r.button_down("a")
+                        r.action("pular")
+                    elif o.kind == "escada":
+                        r.button_down("x")
+                        r.action("escada")
+                    else:
+                        r.action(o.kind)
             if tricks and r.airborne and r.t - r._trick_until > 0.02:
                 r.trick(("left",))
         run(r, seconds, dt, every=play)
@@ -280,6 +293,85 @@ class CorridaTest(unittest.TestCase):
         kinds = {o.kind for o in r.obstacles}
         self.assertTrue(kinds <= set(SCENARIOS[0]["objetos"]))
 
+    def test_stairs_must_be_held_to_the_end(self):
+        ui = FakeUI()
+        r = fresh(ui, [("escada", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.button_down("x")
+        self.assertEqual(r.action("escada"), "perfeito")
+        advance_to(r, 5.0 + C.STAIR_TIME / 2)
+        self.assertEqual(ui.surface, "degraus")
+        r.button_up("x")                                  # soltou no meio
+        self.assertEqual(r.lives, C.LIVES - 1)
+        self.assertIn("tombo", ui.names())
+
+    def test_stairs_held_all_the_way_scores_the_bonus(self):
+        ui = FakeUI()
+        r = fresh(ui, [("escada", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.button_down("x")
+        r.action("escada")
+        score = r.score
+        advance_to(r, 5.0 + C.STAIR_TIME + 0.05)
+        r.button_up("x")
+        self.assertEqual(r.lives, C.LIVES)
+        self.assertGreater(r.score, score)
+        self.assertEqual(ui.surface, "rodas")
+
+    def test_x_without_a_staircase_does_nothing(self):
+        r = fresh(None, [("pular", 20.0)])
+        advance_to(r, 3.0)
+        self.assertIsNone(r.action("escada"))
+        r.button_up("x")
+        self.assertEqual(r.lives, C.LIVES)
+
+    def test_rail_needs_the_jump_and_a_held_through_the_grind(self):
+        ui = FakeUI()
+        r = fresh(ui, [("corrimao", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.button_down("a")
+        self.assertEqual(r.action("pular"), "perfeito")
+        advance_to(r, 5.0 + C.RAIL_JUMP + 0.05)
+        self.assertEqual(ui.surface, "grind")
+        self.assertIn("grind_entra", ui.names())
+        advance_to(r, 5.0 + C.RAIL_JUMP + C.RAIL_TIME + 0.05)
+        r.button_up("a")
+        self.assertEqual(r.lives, C.LIVES)
+
+    def test_rail_without_a_at_landing_falls(self):
+        r = fresh(None, [("corrimao", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.action("pular")
+        advance_to(r, 5.0 + C.RAIL_JUMP + 0.05)
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_releasing_a_early_in_the_grind_falls(self):
+        r = fresh(None, [("corrimao", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.button_down("a")
+        r.action("pular")
+        advance_to(r, 5.0 + C.RAIL_JUMP + 0.5)
+        r.button_up("a")
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_a_alone_does_not_clear_a_rail(self):
+        r = fresh(None, [("corrimao", 5.0), ("pular", 20.0)])
+        advance_to(r, 5.0)
+        r.button_down("a")
+        advance_to(r, 5.6)
+        self.assertEqual(r.lives, C.LIVES - 1)
+
+    def test_trick_announces_its_name(self):
+        ui = FakeUI()
+        r = fresh(ui, [("rampa", 3.0), ("pular", 20.0)])
+        advance_to(r, 3.0)
+        r.action("rampa")
+        advance_to(r, 3.2)
+        r.trick(("left",))
+        advance_to(r, 3.2 + C.TRICK_TIME + 0.01)
+        r.trick(())
+        self.assertEqual(ui.said[-2:], ["kickflip", "shove-it"])
+
     def test_status_text(self):
         r = Run(FakeUI(), seed=1, seen=set(ALL_SEEN), scenarios_seen={0})
         self.assertIn("Praça", r.status_text())
@@ -293,7 +385,8 @@ class SonsTest(unittest.TestCase):
         from pista.corrida import START_SOUND
         wanted = set(KIND_ORDER) | {k + "_agora" for k in KIND_ORDER} | set(START_SOUND.values())
         wanted |= {"acerto", "perfeito", "trick", "trick_tarde", "pouso", "pouso_limpo", "tombo",
-                   "rodas", "fim", "menu_mover", "menu_confirmar"}
+                   "rodas_loop", "degraus_loop", "grind_loop", "grind_entra", "fim",
+                   "menu_mover", "menu_confirmar"}
         wanted |= {"musica_%s_%d" % (sc["id"], i) for sc in SCENARIOS for i in range(5)}
         folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sounds")
         have = {os.path.splitext(f)[0] for f in os.listdir(folder)}

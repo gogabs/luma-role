@@ -6,7 +6,7 @@ A ui recebe:
   ui.brief(texto, tipo, retomar)    fala mais longa; a corrida espera retomar()
   ui.scenario(índice)               trocou o cenário (música e trilha)
   ui.layers(n)                      quantas camadas da música tocam (1 a 5)
-  ui.rolling(volume, pitch)         o som das rodas no chão
+  ui.rolling(volume, pitch, piso)   som contínuo do piso: rodas, degraus ou grind
   ui.remember()                     o que já foi explicado mudou: grave
   ui.over(corrida)                  acabaram as vidas
 """
@@ -81,13 +81,15 @@ class Run:
         self._busy_until = 0.0
         self._air_until = 0.0
         self._crouch_until = 0.0
-        self._grind_until = 0.0
+        self._hold = None           # percurso com botão segurado (escada ou grind)
+        self._rail = None           # salto para o corrimão, antes de pousar
         self._fall_until = 0.0
         self._trick_until = 0.0
         self._flight = []           # manobras do voo atual
         self._in_air = False
         self._layers = 1
         self._dirs = {}             # direcional -> hora do último aperto
+        self.held = set()           # botões apertados agora
         self._event(0.0, "scenario", 0)
         self._plan()
 
@@ -108,26 +110,40 @@ class Run:
     def can_act(self):
         return not self.stopped and self.t >= self._busy_until
 
+    def button_down(self, button):
+        self.held.add(button)
+
+    def button_up(self, button):
+        """Soltar o botão de um percurso (X na escada, A no grind) antes do fim é tombo."""
+        self.held.discard(button)
+        hold = self._hold
+        if (hold is not None and button == hold["button"] and not self.stopped
+                and self.t < hold["end"] - C.RELEASE_GRACE):
+            self._fall()
+
     def action(self, kind):
-        """pular, agachar, corrimao, rampa ou escada. Devolve "perfeito", "ok", "tombo",
-        "livre" (sem obstáculo à vista) ou None (ignorado)."""
+        """pular, agachar, rampa ou escada (o corrimão começa com pular). Devolve "perfeito",
+        "ok", "tombo", "livre" (sem obstáculo à vista) ou None (ignorado)."""
         if not self.can_act:
             return None
         target = self._window()
-        self._start(kind)
-        if target is None:
-            return "livre"
-        if target.kind != kind:
+        if kind == "escada" and target is None:
+            return None             # sem escada à frente, segurar X não leva a nada
+        rail = target is not None and target.kind == "corrimao" and kind == "pular"
+        if target is not None and target.kind != kind and not rail:
             self.obstacles.remove(target)
             self._fall()
             return "tombo"
+        self._start(kind, rail)
+        if target is None:
+            return "livre"
         error = abs(self.t - target.at)
         self.obstacles.remove(target)
         perfect = error <= C.PERFECT
         self.cleared += 1
         self.combo += 1
         self.best_combo = max(self.best_combo, self.combo)
-        points = C.POINTS_OBSTACLE + C.KINDS[kind]["extra"]
+        points = C.POINTS_OBSTACLE + C.KINDS[target.kind]["extra"]
         if perfect:
             points += C.POINTS_PERFECT
             self.perfects += 1
@@ -136,12 +152,19 @@ class Run:
         self._sync_layers()
         return "perfeito" if perfect else "ok"
 
+    def resume(self):
+        """Depois da pausa, os botões podem ter mudado sem a corrida saber: recomeça limpo."""
+        self.held.clear()
+        self._hold = self._rail = None
+        self.halted = False
+
     def direction(self, name):
         """Registra um direcional apertado, para valer como parte da manobra."""
         self._dirs[name] = self.t
 
-    def trick(self, held=()):
-        """Y no ar, com o direcional que estiver apertado (held) ou recém-apertado."""
+    def trick(self, held=None):
+        """Y no ar, com o direcional que estiver apertado ou recém-apertado."""
+        held = self.held if held is None else held
         if self.stopped or self.t < self._fall_until:
             return None
         if not self.airborne or self.t < self._trick_until:
@@ -165,6 +188,7 @@ class Run:
         self.best_combo = max(self.best_combo, self.combo)
         self.score += int(points * multiplier(self.combo))
         self.ui.cue("trick", 1.0, C.TRICKS[name], C.TRICK_PAN.get(name))
+        self.ui.say(C.TRICK_NAMES[name])
         self._sync_layers()
         return name or "neutro"
 
@@ -175,6 +199,9 @@ class Run:
         self.t += dt
         self._run_events()
         if self.paused:
+            return
+        self._holds()
+        if self.stopped:
             return
         self._landing()
         self._cues()
@@ -213,6 +240,20 @@ class Run:
         return ("Novo obstáculo: %s, para %s. Avisa com %s, em quatro batidas. %s"
                 % (name, info["verbo"], info["som"], info["dica"]))
 
+    def _holds(self):
+        if self._rail is not None and self.t >= self._rail["land"]:
+            self._rail = None
+            if "a" not in self.held:        # pousou sem segurar A: perdeu o corrimão
+                self._fall()
+                return
+            self._hold = {"kind": "corrimao", "button": "a", "end": self.t + C.RAIL_TIME}
+            self.ui.cue("grind_entra", 1.0, 1.0, None)
+        hold = self._hold
+        if hold is not None and self.t >= hold["end"]:
+            self._hold = None
+            self.score += C.POINTS_HOLD * multiplier(self.combo)
+            self.ui.cue("pouso", 1.0, 1.0, None)
+
     def _landing(self):
         if self._in_air and self.t >= self._air_until:
             self._in_air = False
@@ -246,22 +287,26 @@ class Run:
                 return o
         return None
 
-    def _start(self, kind):
+    def _start(self, kind, rail=False):
         info = C.KINDS[kind]
-        self._busy_until = self.t + info["busy"]
+        self._busy_until = self.t + (C.KINDS["corrimao"]["busy"] if rail else info["busy"])
         self._crouch_until = self.t + info["busy"] if kind == "agachar" else 0.0
-        self._grind_until = self.t + info["busy"] if kind == "corrimao" else 0.0
+        if rail:
+            self._rail = {"land": self.t + C.RAIL_JUMP}
+        elif kind == "escada":
+            self._hold = {"kind": "escada", "button": "x", "end": self.t + C.STAIR_TIME}
         if info["air"]:
             self._air_until = self.t + info["air"]
             self._in_air = True
             self._flight = []
-        self.ui.cue(START_SOUND[kind], 1.0, 1.0, None)
+        self.ui.cue(START_SOUND["pular" if rail else kind], 1.0, 1.0, None)
 
     def _fall(self):
         self.combo = 0
         self.lives -= 1
         self.falls += 1
-        self._air_until = self._busy_until = self._crouch_until = self._grind_until = 0.0
+        self._air_until = self._busy_until = self._crouch_until = 0.0
+        self._hold = self._rail = None
         self._in_air = False
         self._flight = []
         self._fall_until = self._busy_until = self.t + C.FALL_TIME
@@ -289,13 +334,14 @@ class Run:
             self.ui.layers(n)
 
     def _rolling(self):
-        if self.t < self._fall_until or self._grind_until > self.t or self.airborne:
+        surface, volume = "rodas", 1.0
+        if self._hold is not None:
+            surface = "grind" if self._hold["kind"] == "corrimao" else "degraus"
+        elif self.t < self._fall_until or self._rail is not None or self.airborne:
             volume = 0.0
         elif self._crouch_until > self.t:
             volume = 0.4
-        else:
-            volume = 1.0
-        self.ui.rolling(volume, 0.8 + 0.4 * (self.speed - 1.0) / C.SPEED_GAIN)
+        self.ui.rolling(volume, 0.8 + 0.4 * (self.speed - 1.0) / C.SPEED_GAIN, surface)
 
     # --- o que vem pela frente -------------------------------------------------
     def _event(self, at, kind, value):
@@ -348,8 +394,8 @@ class Run:
                    plural(self.falls, "tombo", "tombos"), self.best_combo))
 
 
-START_SOUND = {"pular": "pulo", "agachar": "agacha", "corrimao": "grind",
-               "rampa": "rampa_sobe", "escada": "escada_desce"}
+START_SOUND = {"pular": "pulo", "agachar": "agacha", "corrimao": "pulo",
+               "rampa": "rampa_sobe", "escada": "degraus_entra"}
 
 
 def lives_text(n):

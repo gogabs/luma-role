@@ -13,8 +13,13 @@ HELP = (
     ("Os obstáculos",
      " ".join("%s: %s. %s" % (KIND_INFO[k]["nome"].capitalize(), KIND_INFO[k]["som"],
                               KIND_INFO[k]["dica"]) for k in KIND_ORDER)),
+    ("Segurar botão",
+     "A escada e o corrimão pedem que você segure o botão. Na escada, aperte X na quarta "
+     "batida e segure enquanto ouvir os degraus. No corrimão, aperte B na quarta batida para "
+     "saltar e segure A: o grind soa como metal raspando. Quando o som acabar, solte. "
+     "Soltar antes do fim, ou não estar segurando A ao pousar, é tombo."),
     ("Manobras",
-     "No ar, depois de pular, pegar a rampa ou descer a escada, aperte Y para fazer uma "
+     "No ar, depois de pular ou pegar a rampa, aperte Y para fazer uma "
      "manobra. Y com um direcional faz outra manobra, e cada uma toca uma nota diferente. "
      "Cada manobra dura um quarto de segundo e precisa caber no voo. Se for tarde demais, "
      "você ouve um toque seco e nada acontece. Repetir a mesma manobra no mesmo voo vale menos."),
@@ -27,8 +32,9 @@ HELP = (
      "A corrida passa por quatro cenários, cada um com uma música: " +
      ", ".join(sc["nome"] for sc in SCENARIOS) + ". Depois da escola, volta à praça, mais rápido."),
     ("Botões",
-     "B pula. Para baixo se abaixa. Para cima pega a rampa. A entra no corrimão. X desce a "
-     "escada. Y faz manobra no ar. Select diz pontos, combo e vidas. Start pausa."),
+     "B pula. Para baixo se abaixa. Para cima pega a rampa. No corrimão, B salta e A fica "
+     "segurado durante o grind. Na escada, X fica segurado até o fim. Y faz manobra no ar. "
+     "Select diz pontos, combo e vidas. Start pausa."),
 )
 
 SOUNDS_MENU = "Aprender os sons"

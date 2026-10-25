@@ -229,12 +229,41 @@ def thud(f, sec, tau=0.07):
                gain(mul(biquad(white(sec), "low", 900), decay(size, 0.015, 0.0005)), 0.8))
 
 
+def read_wav(path):
+    with wave.open(path) as w:
+        raw = w.readframes(w.getnframes())
+    return [v / 32768 for v in struct.unpack("<%dh" % (len(raw) // 2), raw)]
+
+
+def clack(f, sec=0.2):
+    """Tábua batendo em metal ou pedra: estalo agudo e um toque que soa."""
+    size = n(sec)
+    snap = mul(biquad(white(sec), "high", 2800), decay(size, 0.006, 0.0003))
+    ring = add(mul(sine(f, sec), decay(size, 0.05, 0.001)),
+               gain(mul(sine(f * 1.62, sec), decay(size, 0.035, 0.001)), 0.6))
+    return normalize(add(snap, gain(ring, 0.7)), 0.8)
+
+
+def place_loop(track, at, sound):
+    """Soma sound em track a partir de at, dando a volta no fim (para laços)."""
+    for k, v in enumerate(sound):
+        track[(at + k) % len(track)] += v
+
+
 def skating():
-    # pop do ollie: estalo seco com um subir curto de altura
-    size = n(0.16)
-    pop = add(mul(glide(180, 420, 0.16), decay(size, 0.05, 0.001)),
-              gain(mul(biquad(white(0.16), "band", 1800, 1.5), decay(size, 0.03, 0.0005)), 0.9))
+    # ollie: a cauda bate no chão (estalo seco) e a tábua sobe com um toque de madeira
+    size = n(0.2)
+    pop = add(gain(mul(biquad(white(0.2), "band", 2400, 1.2), decay(size, 0.012, 0.0003)), 1.0),
+              gain(mul(glide(210, 150, 0.2), decay(size, 0.06, 0.001)), 0.9),
+              delay(gain(mul(biquad(white(0.1), "band", 900, 1.0), decay(n(0.1), 0.03, 0.002)), 0.5), 0.05))
     write("pulo", normalize(pop, 0.8))
+    # pouso: as quatro rodas e a tábua tocam o chão, com o chocalho dos eixos
+    land = add(thud(125, 0.22, 0.05),
+               delay(gain(thud(110, 0.2, 0.04), 0.6), 0.035),
+               gain(mul(biquad(white(0.25), "band", 3200, 1.5),
+                        [decay(n(0.25), 0.07, 0.001)[k] * (0.6 + 0.4 * math.sin(TAU * 60 * k / RATE))
+                         for k in range(n(0.25))]), 0.35))
+    write("pouso", normalize(land, 0.8))
     # tombo: queda com três quiques e um "uuuu" que desce
     fall = add(thud(110, 0.3, 0.09),
                delay(gain(thud(95, 0.25, 0.08), 0.8), 0.22),
@@ -242,26 +271,49 @@ def skating():
                gain(mul(glide(520, 140, 0.7), fade([1.0] * n(0.7), 0.01, 0.5)), 0.35),
                gain(mul(biquad(white(0.8), "band", 700, 0.8), decay(n(0.8), 0.18)), 0.5))
     write("tombo", normalize(fall, 0.9))
-    write("pouso", normalize(thud(130, 0.2, 0.05), 0.8))
     chime = add(mul(sine(1568, 0.3), decay(n(0.3), 0.07, 0.001)),
                 delay(mul(sine(2093, 0.3), decay(n(0.3), 0.09, 0.001)), 0.06))
     write("pouso_limpo", normalize(chime, 0.6))
-    # agachar: sopro de tecido; grind: metal raspando; rampa: sobe e voa; escada: degraus
     tuck = mul(biquad(white(0.22), "band", 900, 1.0), fade([1.0] * n(0.22), 0.05, 0.12))
     write("agacha", normalize(tuck, 0.5))
-    size = n(0.7)
-    scrape = mul(biquad(white(0.7), "high", 2500), [0.6 + 0.4 * math.sin(TAU * 85 * k / RATE) for k in range(size)])
-    scrape = add(scrape, gain(mul(sine(3300, 0.7), [0.5 + 0.5 * math.sin(TAU * 7 * k / RATE) for k in range(size)]), 0.1))
-    write("grind", normalize(fade(scrape, 0.02, 0.15), 0.55))
     swoosh = mul(biquad(white(0.45), "band", 600, 1.0), fade([1.0] * n(0.45), 0.35, 0.1))
     write("rampa_sobe", normalize(add(swoosh, gain(thud(150, 0.2, 0.05), 0.4)), 0.6))
-    bumps = add(*[delay(gain(thud(160 - 14 * i, 0.12, 0.03), 0.9 - 0.1 * i), 0.07 * i) for i in range(5)])
-    write("escada_desce", normalize(bumps, 0.7))
-    # rodas no asfalto: ruído grave com a trepidação das juntas, em laço
-    base = biquad(white(2.2), "low", 700)
-    size = len(base)
-    rough = mul(base, [0.7 + 0.3 * math.sin(TAU * 11 * k / RATE) for k in range(size)])
-    write("rodas", normalize(loop_seamless(rough, 0.2), 0.5))
+
+    # grind: gravação CC0 de metal raspando (sons-originais/), costurada em laço e com um
+    # pouco de raspado sintético por baixo para não repetir de forma óbvia
+    src = os.path.join(HERE, "..", "sons-originais", "grind_1_bigsoundbank.wav")
+    rec = read_wav(src)
+    loop = loop_seamless(rec, 0.15)
+    rough = biquad(white(len(loop) / RATE), "band", 2600, 0.9)
+    rough = mul(rough, [0.6 + 0.4 * math.sin(TAU * 70 * k / RATE) for k in range(len(rough))])
+    write("grind_loop", normalize(add(normalize(loop, 0.8), gain(normalize(rough, 0.5), 0.3)), 0.7))
+    write("grind_entra", clack(1450))
+
+    # rodas no asfalto: chiado grave de poliuretano, e a cada junta da calçada duas pancadas
+    # (rodas da frente e de trás) ; o laço tem 4 juntas
+    sec, joint = 1.68, 0.42
+    size = n(sec)
+    bed = add(biquad(white(sec + 0.2), "low", 650),
+              gain(biquad(white(sec + 0.2), "band", 2300, 0.8), 0.18))
+    track = loop_seamless(bed, 0.2) if len(bed) > size else bed
+    track = track[:size]
+    for j in range(4):
+        at = n(j * joint)
+        place_loop(track, at, gain(thud(95, 0.12, 0.025), 1.4))
+        place_loop(track, at + n(0.075), gain(thud(105, 0.12, 0.025), 1.0))
+    write("rodas_loop", normalize(track, 0.55))
+
+    # escada: degraus em sequência rápida, cada um um pouco diferente, com o chacoalhar da tábua
+    sec = 1.1
+    size = n(sec)
+    track = [v * 0.6 for v in loop_seamless(biquad(white(sec + 0.15), "band", 1500, 0.6), 0.15)][:size]
+    r2 = random.Random(5)
+    for i in range(10):
+        place_loop(track, n(i * 0.11), gain(thud(r2.uniform(95, 150), 0.12, 0.03), r2.uniform(0.9, 1.3)))
+    write("degraus_loop", normalize(track, 0.6))
+    write("degraus_entra", normalize(add(thud(130, 0.25, 0.06),
+                                         gain(mul(biquad(white(0.3), "band", 1200, 0.8),
+                                                  fade([1.0] * n(0.3), 0.02, 0.2)), 0.5)), 0.75))
 
 
 def feedback():

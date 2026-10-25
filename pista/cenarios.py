@@ -32,12 +32,12 @@ KIND_INFO = {
     "rampa": {"nome": "rampa", "verbo": "pegar a rampa",
               "som": "um assobio que sobe",
               "dica": "Aperte para cima na quarta batida para pegar a rampa. O voo é longo: dá tempo de fazer manobras."},
-    "corrimao": {"nome": "corrimão", "verbo": "entrar no corrimão",
+    "corrimao": {"nome": "corrimão", "verbo": "deslizar no corrimão",
                  "som": "um sininho agudo",
-                 "dica": "Aperte A na quarta batida para deslizar no corrimão."},
+                 "dica": "Na quarta batida, aperte B para saltar e segure A para deslizar até o corrimão acabar. Soltar antes é tombo."},
     "escada": {"nome": "escada", "verbo": "descer a escada",
                "som": "três notas descendo, como degraus",
-               "dica": "Aperte X na quarta batida para descer a escada, e faça manobras no voo."},
+               "dica": "Na quarta batida, aperte X e segure até a escada acabar. Soltar antes é tombo."},
 }
 
 KIND_ORDER = ("pular", "agachar", "rampa", "corrimao", "escada")

@@ -13,11 +13,13 @@ complementa (as manobras soam à esquerda ou à direita conforme o direcional).
 | Batida seca de madeira, grave | Obstáculo baixo (banco, cone): **pular** | B |
 | Assobio que **desce** | Obstáculo alto (galho, cancela): **passar rente** | Baixo |
 | Assobio que **sobe** | **Rampa** | Cima |
-| Sininho metálico agudo | **Corrimão** | A |
-| Três notas descendo, como degraus | **Escada** | X |
+| Sininho metálico agudo | **Corrimão**: salte com B e **segure A** durante o grind | B, depois A |
+| Três notas descendo, como degraus | **Escada**: **segure X** por todo o percurso | X |
 
-No ar (depois de pular, da rampa ou da escada), **Y** faz uma manobra; Y com um
-direcional faz outra, e cada uma toca uma nota diferente. Uma manobra dura um
+Escada e corrimão pedem segurar o botão até o som acabar (degraus ou metal raspando); soltar antes, ou pousar no corrimão sem A, é tombo.
+
+No ar (depois de pular ou da rampa), **Y** faz uma manobra; Y com um
+direcional faz outra. Cada uma toca uma nota diferente e o jogo fala o nome (shove-it, kickflip, heelflip, indy grab, tail grab). Uma manobra dura um
 quarto de segundo e precisa caber no voo. Se for tarde, um toque seco avisa e
 nada acontece. Cada vitória ou manobra sobe o **combo**; a cada quatro, o
 multiplicador de pontos sobe (até 5×). A música ganha uma camada nova com o
@@ -34,7 +36,9 @@ de exemplo. O menu "Aprender os sons" repete isso quando quiser.
 
 | Botão | O quê |
 |---|---|
-| B / Baixo / Cima / A / X | Pular / passar rente / rampa / corrimão / escada (na quarta batida) |
+| B / Baixo / Cima | Pular / passar rente / rampa (na quarta batida) |
+| B e segurar A | Corrimão: salto na quarta batida, A segurado no grind |
+| Segurar X | Escada: apertar na quarta batida e segurar até o fim |
 | Y (com ou sem direcional) | Manobra no ar |
 | Select | Pontos, combo, multiplicador e vidas |
 | Start | Pausa (dá para mudar o volume da música) |
