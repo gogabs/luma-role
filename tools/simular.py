@@ -15,6 +15,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 SECONDS = float(next((a for a in sys.argv[1:] if not a.startswith("-")), 120))
 SLOPPY = "--erra" in sys.argv
+SCREEN = "--tela" in sys.argv    # desenha de verdade pela SDL (driver de vídeo "dummy")
+if SCREEN:
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 os.environ.setdefault("ALSOFT_DRIVERS", "null")
 os.environ["A11Y_SAVE_DIR"] = tempfile.mkdtemp(prefix="role-")
@@ -90,6 +93,17 @@ def fake_run(self):
                 self._dispatch_button("left", a11y.DOWN, 0)
                 press("y")
                 self._dispatch_button("left", a11y.UP, 0)
+        if SCREEN and tick % 3 == 0:
+            gfx = self.gfx
+            if gfx.available:
+                gfx.begin()
+                for fn in self._handlers["draw"]:
+                    fn(gfx)
+                if tick in (1500, 2400):
+                    gfx.screenshot("/tmp/tela-%d.png" % tick)
+                gfx.end()
+            elif tick == 0:
+                print("SDL indisponível: sem desenho")
         if state["run"] is not None:
             seen_run = True
         if seen_run and state["phase"] == "menu" and state["run"] is None and not self._focus:

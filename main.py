@@ -15,6 +15,7 @@ import r36s_a11y as a11y
 from pista import config as C
 from pista import textos as T
 from pista.cenarios import KIND_INFO, KIND_ORDER, SCENARIOS
+from pista import tela
 from pista.corrida import Run
 
 game = a11y.Game(repeat=False)
@@ -192,6 +193,13 @@ def finish(run):
 def back_to_menu():
     end_run()
     open_main()
+
+
+@game.on_draw
+def draw(gfx):
+    focus = game._focus[-1] if game._focus else None
+    menu = focus if hasattr(focus, "items") else None
+    tela.draw(gfx, state["run"], menu=menu, caption=game._last_said, now=game.ms() / 1000.0)
 
 
 @game.on_update

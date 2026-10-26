@@ -87,6 +87,9 @@ class Run:
         self._trick_until = 0.0
         self._flight = []           # manobras do voo atual
         self._in_air = False
+        self._air_start = 0.0
+        self.last_trick = (None, -9.0)   # (nome, hora) da última manobra, para a tela
+        self.fell_at = -9.0
         self._layers = 1
         self._dirs = {}             # direcional -> hora do último aperto
         self.held = set()           # botões apertados agora
@@ -199,10 +202,40 @@ class Run:
         self.combo += 1
         self.best_combo = max(self.best_combo, self.combo)
         self.score += int(points * multiplier(self.combo))
+        self.last_trick = (name, self.t)
         self.ui.cue("trick", 1.0, C.TRICKS[name], C.TRICK_PAN.get(name))
         self.ui.say(C.TRICK_NAMES[name])
         self._sync_layers()
         return name or "neutro"
+
+    # --- o que a tela mostra ---------------------------------------------------
+    @property
+    def pose(self):
+        """A pose do patinador: queda, ar, rampa, freada, corrimao, escada, curva_esq, curva_dir,
+        salto_corrimao ou rodas."""
+        if self.t < self._fall_until:
+            return "queda"
+        if self._hold is not None:
+            return self._hold["kind"]
+        if self._rail is not None:
+            return "salto_corrimao"
+        if self.airborne:
+            return "rampa" if self._air_until - self._air_start > 1.0 else "ar"
+        return "rodas"
+
+    @property
+    def air_progress(self):
+        span = self._air_until - self._air_start
+        return min(1.0, max(0.0, (self.t - self._air_start) / span)) if span > 0 else 0.0
+
+    @property
+    def hold_left(self):
+        """Fração (1 a 0) que falta do percurso segurado, ou None."""
+        hold = self._hold
+        if hold is None:
+            return None
+        total = hold["end"] - hold["start"]
+        return max(0.0, min(1.0, (hold["end"] - self.t) / total))
 
     # --- tempo ---------------------------------------------------------------
     def update(self, dt):
@@ -258,7 +291,8 @@ class Run:
             if "a" not in self.held:        # pousou sem segurar A: perdeu o corrimão
                 self._fall()
                 return
-            self._hold = {"kind": "corrimao", "button": "a", "end": self.t + C.RAIL_TIME}
+            self._hold = {"kind": "corrimao", "button": "a", "start": self.t,
+                          "end": self.t + C.RAIL_TIME}
             self.ui.cue("grind_entra", 1.0, 1.0, None)
         hold = self._hold
         if hold is not None and hold["kind"] == "freada":
@@ -314,14 +348,17 @@ class Run:
         if rail:
             self._rail = {"land": self.t + C.RAIL_JUMP}
         elif info.get("hold"):
-            self._hold = {"kind": kind, "button": info["button"], "end": self.t + info["hold"]}
+            self._hold = {"kind": kind, "button": info["button"], "start": self.t,
+                          "end": self.t + info["hold"]}
         if info["air"]:
             self._air_until = self.t + info["air"]
+            self._air_start = self.t
             self._in_air = True
             self._flight = []
         self.ui.cue(START_SOUND["pular" if rail else kind], 1.0, 1.0, None)
 
     def _fall(self):
+        self.fell_at = self.t
         self.combo = 0
         self.lives -= 1
         self.falls += 1
