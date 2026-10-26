@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-INCLUDE = ("game.json", "main.py", "README.md", "CREDITOS.md", "pista", "sounds", "r36s_a11y")
+INCLUDE = ("game.json", "main.py", "README.md", "CREDITOS.md", "pista", "sounds", "sprites", "r36s_a11y")
 
 
 def main():

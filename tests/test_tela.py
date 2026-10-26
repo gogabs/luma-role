@@ -24,6 +24,17 @@ class Recorder:
         return call
 
 
+class SpriteRecorder(Recorder):
+    """Uma gfx de mentira que também carrega imagens: aí a tela usa os sprites."""
+
+    class Img:
+        width, height, texture = 432, 216, True
+
+    def image(self, path):
+        assert os.path.exists(path), path
+        return self.Img()
+
+
 class Quiet:
     def __getattr__(self, name):
         return lambda *a, **k: None
@@ -52,6 +63,30 @@ class TelaTest(unittest.TestCase):
                     run.action("pular" if o.kind == "corrimao" else o.kind)
                 tela.draw(Recorder(), run)
             tela.draw(Recorder(), run, menu=Menu())
+
+    def test_sprite_path_draws_every_pose(self):
+        for kind in KIND_ORDER:
+            run = Run(Quiet(), seed=3, seen=set(KIND_ORDER), scenarios_seen={0, 1, 2, 3})
+            for sc in range(4):
+                run.scenario = sc
+                g = SpriteRecorder()
+                tela.draw(g, run)
+                self.assertIn("draw", g.calls)
+            for _ in range(900):
+                run.update(0.01)
+                if run.obstacles and run.can_act and run.t >= run.obstacles[0].at:
+                    o = run.obstacles[0]
+                    run.button_down("a")
+                    run.action("pular" if o.kind == "corrimao" else o.kind)
+                tela.draw(SpriteRecorder(), run)
+        tela.draw(SpriteRecorder(), None, menu=Menu(), caption="oi")
+
+    def test_falls_back_to_vectors_without_images(self):
+        class NoImages(Recorder):
+            available = False
+        g = NoImages()
+        tela.draw(g, None)
+        self.assertNotIn("draw", g.calls)
 
     def test_fall_and_game_over_draw(self):
         run = Run(Quiet(), seed=1, seen=set(KIND_ORDER), scenarios_seen={0})

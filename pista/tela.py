@@ -6,14 +6,19 @@ Desenha em 640x480. O patinador fica à esquerda e os obstáculos chegam da dire
 import math
 
 from . import config as C
+from . import sprites
 from .cenarios import KIND_INFO, SCENARIOS
 from .corrida import multiplier
 
 W, H = 640, 480
 GROUND = 372
+FEET = sprites.FEET
 SKATER_X = 150
 PX_PER_SEC = 150          # a 3 s de distância o obstáculo entra pela borda direita
 SHOW_SECONDS = 3.0
+PLATE = (0, 0, 0, 120)     # fundo translúcido atrás dos textos, para o contraste não depender do cenário
+
+_scroll = {"t": 0.0, "pos": 0.0}
 
 WHITE, BLACK = "#ffffff", "#000000"
 YELLOW, ORANGE, RED, CYAN, GREEN = "#ffd23f", "#ff8a00", "#ff3b3b", "#35e0ff", "#5dff7e"
@@ -48,16 +53,30 @@ def text(gfx, s, x, y, size=24, color=WHITE, align="left", shadow=True):
 
 def draw(gfx, run, menu=None, caption="", scenario=0, now=0.0):
     """run: a corrida em andamento ou None; menu: o menu aberto ou None."""
-    pal = PALETTES[SCENARIOS[(run.scenario if run else scenario) % len(SCENARIOS)]["id"]]
+    sid = SCENARIOS[(run.scenario if run else scenario) % len(SCENARIOS)]["id"]
+    pal = PALETTES[sid]
     t = run.t if run else now
     speed = run.speed if run else 1.0
-    background(gfx, pal, t, speed)
-    if run is not None:
-        world(gfx, run, pal)
-        hud(gfx, run)
+    art = sprites.load(gfx)
+    dt = t - _scroll["t"]
+    _scroll["t"] = t
+    if 0 < dt < 1.0:
+        _scroll["pos"] += dt * PX_PER_SEC * speed
+    if art:
+        art.background(gfx, sid, _scroll["pos"])
     else:
+        background(gfx, pal, t, speed)
+    if run is not None:
+        world(gfx, run, pal, art, sid)
+        hud(gfx, run, art)
+    else:
+        if art:
+            gfx.rect(0, 8, W, 84, color=PLATE)
         text(gfx, "ROLÊ", W // 2, 14, 72, YELLOW, "center")
-        skater(gfx, SKATER_X + 60, GROUND, "rodas", t, speed)
+        if art:
+            art.skater_draw(gfx, SKATER_X + 60, 0, "roll", int(t * 9) % 4, False)
+        else:
+            skater(gfx, SKATER_X + 60, GROUND, "rodas", t, speed)
     if menu is not None:
         menu_box(gfx, menu)
     if caption:
@@ -82,13 +101,18 @@ def background(gfx, pal, t, speed):
         gfx.rect(i * 90 - shift, GROUND + 38, 46, 6, color=pal["mark"])
 
 
-def world(gfx, run, pal):
-    for o in run.obstacles:
-        dt = o.at - run.t
-        if dt > SHOW_SECONDS:
+def world(gfx, run, pal, art=None, sid="praca"):
+    for o in reversed(run.obstacles):
+        x = SKATER_X + (o.at - run.t) * PX_PER_SEC * run.speed
+        if x > W + 80:
             continue
-        x = SKATER_X + dt * PX_PER_SEC
-        obstacle(gfx, o, x, pal)
+        if art:
+            top = art.obstacle(gfx, o.kind, sid, x)
+            art.beat_dots(gfx, x, 172, o.cues)
+            gfx.rect(x - 90, FEET + 22, 180, 26, color=PLATE)
+            text(gfx, o.name, x, FEET + 24, 20, WHITE, "center")
+        else:
+            obstacle(gfx, o, x, pal)
     pose = run.pose
     lift = 0.0
     spin = 0.0
@@ -100,11 +124,23 @@ def world(gfx, run, pal):
         spin = (run.t - at) / C.TRICK_TIME * 360 * (-1 if name == "left" else 1)
     if pose == "salto_corrimao":
         lift = 60
-    skater(gfx, SKATER_X, GROUND - lift, pose, run.t, run.speed, spin, getattr(run, "_hold", None))
-    if pose == "queda":
-        for i in range(4):
-            a = run.t * 6 + i * 1.57
-            gfx.circle(SKATER_X + 28 * math.cos(a), GROUND - 80 + 12 * math.sin(a), 6, color=YELLOW)
+    if art and pose == "corrimao":
+        lift = 74
+        art.obstacle(gfx, "corrimao", sid, SKATER_X)
+    elif art and pose == "escada":
+        left = run.hold_left or 0.0
+        lift = 120 * left
+        art.obstacle(gfx, "escada", sid, SKATER_X + 40)
+    if art:
+        sname, n, flip = art.skater_frame(run, run.t)
+        art.skater_draw(gfx, SKATER_X, lift, sname, n, flip)
+        art.effects(gfx, run, SKATER_X, lift, run.t)
+    else:
+        skater(gfx, SKATER_X, GROUND - lift, pose, run.t, run.speed, spin, getattr(run, "_hold", None))
+        if pose == "queda":
+            for i in range(4):
+                a = run.t * 6 + i * 1.57
+                gfx.circle(SKATER_X + 28 * math.cos(a), GROUND - 80 + 12 * math.sin(a), 6, color=YELLOW)
     if name is not None or at > 0:
         if 0 <= run.t - at < 1.0 and run.last_trick[1] > 0:
             text(gfx, C.TRICK_NAMES[name], SKATER_X + 40, max(190, GROUND - lift - 150), 30, CYAN, "left")
@@ -215,12 +251,17 @@ def skater(gfx, x, y, pose, t, speed, spin=0.0, hold=None):
 
 
 # --- painel -------------------------------------------------------------------------
-def hud(gfx, run):
+def hud(gfx, run, art=None):
+    if art:
+        gfx.rect(0, 0, W, 86, color=PLATE)
     text(gfx, "%d" % run.score, 16, 8, 48, WHITE)
     mult = multiplier(run.combo)
-    text(gfx, "COMBO %d   x%d" % (run.combo, mult), 16, 62, 28, YELLOW if run.combo else "#888888")
+    text(gfx, "COMBO %d   x%d" % (run.combo, mult), 16, 62, 28, YELLOW if run.combo else "#c8c8c8")
     for i in range(C.LIVES):
-        gfx.circle(W - 28 - i * 40, 32, 15, color=RED if i < run.lives else "#444444", fill=True)
+        if art:
+            art.ui_piece(gfx, "coracao" if i < run.lives else "coracao_vazio", W - 48 - i * 44, 12)
+        else:
+            gfx.circle(W - 28 - i * 40, 32, 15, color=RED if i < run.lives else "#444444", fill=True)
     from .corrida import layers_for
     layers = layers_for(run.combo)
     for i in range(5):
@@ -237,17 +278,21 @@ def hud(gfx, run):
                 prompt = "SEGURE BAIXO E " + ("ESQUERDA" if hold["side"] == "left" else "DIREITA")
             elif run.t >= hold["at"]:
                 prompt = "ESCOLHA O LADO: " + ("ESQUERDA" if hold["side"] == "left" else "DIREITA")
+        if art:
+            gfx.rect(20, 100, W - 40, 46, color=PLATE)
         text(gfx, prompt, W // 2, 108, 40, GREEN, "center")
         gfx.rect(120, 156, 400, 18, color="#333333")
         gfx.rect(120, 156, 400 * left, 18, color=GREEN)
     elif nxt is not None and nxt.at - run.t < SHOW_SECONDS:
+        if art:
+            gfx.rect(120, 102, W - 240, 40, color=PLATE)
         text(gfx, "%s: %s" % (ACTION_WORD[nxt.kind], BUTTON_HINT[nxt.kind]), W // 2, 108, 34, ORANGE, "center")
     if run.over:
         gfx.rect(0, 0, W, H, color=(0, 0, 0, 150))
         text(gfx, "FIM DA CORRIDA", W // 2, 170, 56, RED, "center")
         text(gfx, "%d pontos" % run.score, W // 2, 250, 44, WHITE, "center")
     elif run.t < run._fall_until:
-        gfx.rect(0, 0, W, H, color=(255, 0, 0, 70))
+        gfx.rect(0, 0, W, H, color=(255, 0, 0, 40))
         text(gfx, "TOMBO", W // 2, 200, 72, RED, "center")
 
 

@@ -34,7 +34,7 @@ de exemplo. O menu "Aprender os sons" repete isso quando quiser.
 
 ## Tela
 
-A tela é só um acompanhamento (nada existe só nela): cenário com a cor de cada fase, o patinador com uma pose por ação, o obstáculo chegando com três pontos que acendem a cada batida (o terceiro, maior, é a hora), pontos, combo, vidas, camadas da música, o botão a apertar e uma barra com o tempo que falta de cada percurso segurado. Tudo em formas de alto contraste, sem imagens. `python3 tools/previa_tela.py` gera PNGs de cada situação (precisa do Pillow).
+A tela é só um acompanhamento (nada existe só nela): cenário com a cor de cada fase, o patinador com uma pose por ação, o obstáculo chegando com três pontos que acendem a cada batida (o terceiro, maior, é a hora), pontos, combo, vidas, camadas da música, o botão a apertar e uma barra com o tempo que falta de cada percurso segurado. Tudo em pixel art (sprites/, ampliada 3×): patinador animado (rolando, salto, giro das manobras, freada, grind com faíscas, degraus, inclinação nas curvas, queda), cenários em camadas que rolam em parallax, e placas translúcidas atrás dos textos para o contraste não depender do fundo. Se as imagens não carregarem, a tela volta sozinha para os vetores. `python3 tools/previa_tela.py` gera PNGs de cada situação (precisa do Pillow).
 
 ## Controles
 
@@ -73,6 +73,7 @@ no cartão.
 ```bash
 python3 -m unittest discover -s tests   # regras, textos e conferência dos sons
 python3 tools/gerar_sons.py             # sons e música por síntese, em sounds/
+python3 tools/gerar_sprites.py          # sprites em pixel art, em sprites/ (precisa do Pillow)
 python3 tools/previa_tela.py            # PNGs da tela em previa-telas/ (precisa do Pillow)
 python3 tools/simular.py 120            # roda o main.py de verdade, sem tela, com jogador automático
 python3 tools/sync_sdk.py               # atualiza a cópia do Mage Core em r36s_a11y/

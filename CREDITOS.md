@@ -30,3 +30,7 @@ registre aqui autor, licença (CC0 ou CC-BY) e fonte.
 | Pisos em laço | `rodas_loop` (chiado e juntas da calçada), `degraus_loop`, `curva_esq_loop`, `curva_dir_loop` | ruído filtrado, pancadas e zumbido de corneta |
 | Retorno | `acerto`, `perfeito`, `trick` (corda dedilhada, Karplus-Strong), `trick_tarde`, `fim`, `cenario`, menus | senos curtos |
 | Música | `musica_<cenário>_0` a `_4` | 5 camadas por cenário: bumbo e baixo, chimbal e palma, acordes, melodia, arpejo |
+
+## Imagens
+
+Todos os sprites em `sprites/` são gerados por código (`tools/gerar_sprites.py`, com o Pillow): não há arte de terceiros.

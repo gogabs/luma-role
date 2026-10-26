@@ -19,6 +19,7 @@ from pista import tela
 from pista.cenarios import SCENARIOS
 from pista.corrida import Obstacle, Run
 
+_IMGS = {}
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
 
@@ -29,7 +30,35 @@ def rgba(c):
     return tuple(c) + (255,) * (4 - len(c))
 
 
+class PilImage:
+    def __init__(self, img):
+        self.img, self.width, self.height = img, img.width, img.height
+        self.texture = True
+
+
 class PilGfx:
+    available = True
+
+    def image(self, path):
+        if not hasattr(self, "_imgs"):
+            self._imgs = _IMGS
+        if path not in self._imgs:
+            self._imgs[path] = PilImage(Image.open(path).convert("RGBA"))
+        return self._imgs[path]
+
+    def draw(self, image, x, y, src=None, scale=1.0, rotation=0.0, flip_x=False, flip_y=False,
+             alpha=255, tint=None):
+        sx, sy, sw, sh = src if src else (0, 0, image.width, image.height)
+        part = image.img.crop((sx, sy, sx + sw, sy + sh))
+        part = part.resize((int(sw * scale), int(sh * scale)), Image.NEAREST)
+        if flip_x:
+            part = part.transpose(Image.FLIP_LEFT_RIGHT)
+        if alpha < 255:
+            part.putalpha(part.getchannel("A").point(lambda v: v * alpha // 255))
+        layer = Image.new("RGBA", self.img.size, (0, 0, 0, 0))
+        layer.paste(part, (int(x), int(y)))
+        self._put(layer)
+
     def __init__(self):
         self.img = Image.new("RGBA", (640, 480), (0, 0, 0, 255))
 
@@ -86,6 +115,7 @@ class Quiet:
 
 
 def scene(name, out, kinds, at, scenario=0, setup=None, caption=""):
+    tela._scroll.update(t=0.0, pos=0.0)
     run = Run(Quiet(), seed=1, seen={"pular", "freada", "rampa", "corrimao", "escada", "curva_esq", "curva_dir"},
               scenarios_seen={0, 1, 2, 3})
     run.scenario = scenario

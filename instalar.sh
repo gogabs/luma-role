@@ -18,7 +18,7 @@ fi
 PKG=$(mktemp -d)
 trap 'rm -rf "$PKG"' EXIT
 mkdir -p "$PKG/$ID"
-cp -r "$HERE/game.json" "$HERE/main.py" "$HERE/pista" "$HERE/sounds" "$HERE/r36s_a11y" "$PKG/$ID/"
+cp -r "$HERE/game.json" "$HERE/main.py" "$HERE/pista" "$HERE/sounds" "$HERE/sprites" "$HERE/r36s_a11y" "$PKG/$ID/"
 find "$PKG" -name __pycache__ -prune -exec rm -rf {} +
 
 tar -C "$PKG" -czf - "$ID" | ssh "$HOST" "
