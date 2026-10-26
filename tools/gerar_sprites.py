@@ -93,13 +93,18 @@ def skater(pose):
 
 
 def skate(c, foot, tone):
+    """Patim quad: bota alta com listra, placa e quatro rodas separadas."""
     x, y = round(foot[0]), round(foot[1])
-    c.rect(x - 4, y - 3, 9, 4, OUTLINE)
-    c.rect(x - 3, y - 3, 7, 3, shade(BOOT, tone))
-    c.rect(x - 4, y + 1, 9, 2, OUTLINE)
-    for wx in (x - 3, x + 2):
-        c.rect(wx - 1, y + 1, 3, 3, OUTLINE)
-        c.rect(wx, y + 1, 1, 2, shade(WHEEL, tone))
+    c.rect(x - 5, y - 6, 9, 6, OUTLINE)                      # cano da bota
+    c.rect(x - 4, y - 5, 7, 4, shade(BOOT, tone))
+    c.rect(x - 4, y - 3, 7, 1, shade(WHEEL, tone))           # listra
+    c.rect(x + 3, y - 3, 3, 3, OUTLINE)                      # biqueira
+    c.rect(x + 3, y - 3, 2, 2, shade(BOOT, tone))
+    c.rect(x - 6, y, 13, 2, OUTLINE)                         # placa
+    c.rect(x - 5, y, 11, 1, shade("#9aa3b5", tone))
+    for wx in (x - 6, x - 3, x + 2, x + 5):                  # quatro rodas, duas e duas
+        c.rect(wx, y + 1, 3, 4, OUTLINE)
+        c.rect(wx + 1, y + 2, 1, 2, shade("#ffd23f", tone))
 
 
 def roll_frames():
