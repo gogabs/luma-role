@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+previa-sons/
+dist/
+previa-telas/
+previa-sprites/

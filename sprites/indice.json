@@ -1,0 +1,258 @@
+{
+ "celula": 48,
+ "colunas": 8,
+ "interface": {
+  "coracao": [
+   0,
+   0,
+   11,
+   10
+  ],
+  "coracao_vazio": [
+   14,
+   0,
+   11,
+   10
+  ],
+  "estrela0": [
+   90,
+   16,
+   11,
+   11
+  ],
+  "estrela1": [
+   102,
+   16,
+   11,
+   11
+  ],
+  "estrela2": [
+   114,
+   16,
+   11,
+   11
+  ],
+  "faisca0": [
+   0,
+   16,
+   12,
+   12
+  ],
+  "faisca1": [
+   14,
+   16,
+   12,
+   12
+  ],
+  "faisca2": [
+   28,
+   16,
+   12,
+   12
+  ],
+  "faisca3": [
+   42,
+   16,
+   12,
+   12
+  ],
+  "poeira0": [
+   0,
+   30,
+   16,
+   16
+  ],
+  "poeira1": [
+   18,
+   30,
+   16,
+   16
+  ],
+  "poeira2": [
+   36,
+   30,
+   16,
+   16
+  ],
+  "poeira3": [
+   54,
+   30,
+   16,
+   16
+  ],
+  "ponto": [
+   30,
+   0,
+   13,
+   13
+  ],
+  "ponto_apagado": [
+   46,
+   0,
+   13,
+   13
+  ],
+  "ponto_hora": [
+   62,
+   0,
+   13,
+   13
+  ],
+  "ponto_hora_apagado": [
+   78,
+   0,
+   13,
+   13
+  ]
+ },
+ "obstaculos": {
+  "corrimao_escola": [
+   73,
+   163,
+   70,
+   30
+  ],
+  "corrimao_estacionamento": [
+   289,
+   109,
+   70,
+   30
+  ],
+  "corrimao_praca": [
+   289,
+   55,
+   70,
+   30
+  ],
+  "corrimao_rua": [
+   73,
+   109,
+   70,
+   30
+  ],
+  "curva": [
+   145,
+   163,
+   34,
+   52
+  ],
+  "escada_escola": [
+   1,
+   163,
+   66,
+   44
+  ],
+  "escada_estacionamento": [
+   217,
+   109,
+   66,
+   44
+  ],
+  "escada_praca": [
+   217,
+   55,
+   66,
+   44
+  ],
+  "escada_rua": [
+   1,
+   109,
+   66,
+   44
+  ],
+  "freada_escola": [
+   73,
+   55,
+   40,
+   36
+  ],
+  "freada_estacionamento": [
+   1,
+   55,
+   66,
+   30
+  ],
+  "freada_praca": [
+   289,
+   1,
+   44,
+   18
+  ],
+  "freada_rua": [
+   361,
+   1,
+   30,
+   44
+  ],
+  "pular_escola": [
+   217,
+   1,
+   26,
+   22
+  ],
+  "pular_estacionamento": [
+   145,
+   1,
+   18,
+   24
+  ],
+  "pular_praca": [
+   1,
+   1,
+   48,
+   22
+  ],
+  "pular_rua": [
+   73,
+   1,
+   34,
+   20
+  ],
+  "rampa_escola": [
+   361,
+   109,
+   60,
+   34
+  ],
+  "rampa_estacionamento": [
+   145,
+   109,
+   60,
+   34
+  ],
+  "rampa_praca": [
+   145,
+   55,
+   60,
+   34
+  ],
+  "rampa_rua": [
+   361,
+   55,
+   60,
+   34
+  ]
+ },
+ "patinador": {
+  "air": 4,
+  "brake": 17,
+  "fall": 25,
+  "grind": 19,
+  "lean_l": 23,
+  "lean_r": 24,
+  "roll": 0,
+  "spin": 9,
+  "stairs": 21
+ },
+ "quadros": {
+  "air": 5,
+  "brake": 2,
+  "fall": 3,
+  "grind": 2,
+  "lean_l": 1,
+  "lean_r": 1,
+  "roll": 4,
+  "spin": 8,
+  "stairs": 2
+ }
+}
